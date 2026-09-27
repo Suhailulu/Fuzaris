@@ -512,3 +512,4 @@ button {
   color: #0077a8;
   text-decoration: underline;
 }
+.hide-on-mobile { display: none; } @media (min-width: 768px) { .hide-on-mobile { display: flex; } }
