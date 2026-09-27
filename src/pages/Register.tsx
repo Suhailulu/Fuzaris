@@ -1,22 +1,29 @@
 import { useState } from 'react';
-import { useAuth } from '../lib/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, Activity, Compass, Shield, User, Building } from 'lucide-react';
+import { Map, ArrowRight, ArrowLeft, ShieldCheck, Globe, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 export function Register() {
-  const { register } = useAuth();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [orgName, setOrgName] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    
+    if (!fullName || !email || !password || !orgName) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
     try {
       await register(email, password, fullName, orgName);
       navigate('/');
@@ -28,102 +35,160 @@ export function Register() {
   };
 
   return (
-    <div className="auth-layout">
-      {/* Sidebar / Branding */}
-      <div className="auth-sidebar">
-        <div className="flex items-center gap-3 mb-8">
-          <Compass size={48} className="text-[#00A8E8]" />
-          <span className="text-2xl font-bold tracking-widest text-white/90">SIH-26062</span>
-        </div>
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'white' }}>
+      
+      {/* Left Side: Enterprise Branding */}
+      <div style={{ 
+        flex: 1, 
+        background: 'var(--color-navy)', 
+        position: 'relative', 
+        overflow: 'hidden',
+      }} className="hide-on-mobile">
+        {/* Abstract Background Elements */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at 20% 30%, rgba(37,99,235,0.15) 0%, rgba(11,20,38,1) 70%)' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '60%', height: '60%', background: 'radial-gradient(circle at center, rgba(96,165,250,0.1) 0%, rgba(11,20,38,0) 70%)', transform: 'rotate(15deg)' }} />
         
-        <h1>POLAR-IMS</h1>
-        <p className="mb-8">
-          Join the Integrated Polar Expedition Logistics and Asset Management System network.
-        </p>
+        {/* Decorative Grid */}
+        <div style={{ 
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+          backgroundSize: '40px 40px', zIndex: 0 
+        }} />
 
-        <div className="flex flex-col gap-4 mt-8">
-          <div className="flex items-center gap-3 text-white/80">
-            <Building className="text-[#20C997]" />
-            <span>Create your Organization Profile</span>
+        <div style={{ position: 'relative', zIndex: 1, padding: 'var(--space-3xl)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+            <div style={{
+              width: 48, height: 48, background: 'linear-gradient(135deg, var(--color-cobalt), #60A5FA)',
+              borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+            }}>
+              <Map size={28} />
+            </div>
+            <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'white' }}>
+              PolarOps
+            </span>
           </div>
-          <div className="flex items-center gap-3 text-white/80">
-            <User className="text-[#00A8E8]" />
-            <span>Become the default Administrator</span>
+
+          <div style={{ margin: 'auto 0' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: 'rgba(255,255,255,0.1)', borderRadius: 'var(--radius-full)', marginBottom: 'var(--space-xl)', fontSize: 'var(--text-sm)', color: 'white', backdropFilter: 'blur(4px)' }}>
+              <ShieldCheck size={16} color="#60A5FA" /> Secure Access Portal
+            </div>
+            <h1 style={{ fontSize: '3rem', fontFamily: 'var(--font-heading)', color: 'white', lineHeight: 1.1, marginBottom: 'var(--space-lg)' }}>
+              Logistics & Asset<br/>
+              <span style={{ color: '#60A5FA' }}>Management System</span>
+            </h1>
+            <p style={{ fontSize: 'var(--text-lg)', color: 'rgba(255,255,255,0.6)', maxWidth: '480px', lineHeight: 1.6 }}>
+              Centralized command center for managing critical extreme-environment operations, personnel tracking, and emergency response.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--space-xl)', color: 'rgba(255,255,255,0.5)', fontSize: 'var(--text-sm)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={16} color="#10B981"/> SOC2 Compliant</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={16} color="#60A5FA"/> Offline Sync</span>
           </div>
         </div>
       </div>
 
-      {/* Registration Form */}
-      <div className="auth-form-container">
-        <div className="auth-glass-box">
-          <h2 className="auth-title">Create Organization</h2>
-          <p className="auth-subtitle">Get started with your POLAR-IMS workspace.</p>
+      {/* Right Side: Form */}
+      <div style={{ flex: '1 1 50%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-2xl)', position: 'relative' }}>
+        
+        {/* Back Button */}
+        <Link to="/" style={{ 
+          position: 'absolute', top: 'var(--space-2xl)', left: 'var(--space-2xl)', 
+          display: 'flex', alignItems: 'center', gap: '8px', 
+          color: 'var(--color-text-secondary)', textDecoration: 'none', 
+          fontWeight: 500, fontSize: 'var(--text-sm)',
+          transition: 'color 0.2s'
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = 'var(--color-navy)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-text-secondary)'}
+        >
+          <ArrowLeft size={18} /> Back to Home
+        </Link>
+
+        <div style={{ maxWidth: '440px', width: '100%' }} className="animate-fade-in">
           
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
+            <h2 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-navy)', marginBottom: '8px' }}>
+              Create an account
+            </h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-md)' }}>
+              Join PolarOps Mission Control
+            </p>
+          </div>
+
           {error && (
-            <div className="mb-6 text-sm" style={{ padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-critical)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <div style={{ 
+              padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FCA5A5', 
+              color: '#DC2626', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)',
+              fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: '8px'
+            }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="auth-input-group">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+            
+            <div className="form-group">
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Full Name</label>
               <input 
                 type="text" 
-                className="auth-input" 
-                placeholder="Full Name"
-                required 
-                value={fullName} 
+                value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                className="form-control" 
+                placeholder="e.g. Dr. Jane Smith" 
+                style={{ padding: '12px 16px', fontSize: '16px' }}
+                disabled={loading}
               />
-              <User className="auth-input-icon" size={20} />
             </div>
-
-            <div className="auth-input-group">
+            
+            <div className="form-group">
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Organization Name</label>
               <input 
                 type="text" 
-                className="auth-input" 
-                placeholder="Organization Name"
-                required 
-                value={orgName} 
+                value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
+                className="form-control" 
+                placeholder="e.g. Polar Research Institute" 
+                style={{ padding: '12px 16px', fontSize: '16px' }}
+                disabled={loading}
               />
-              <Building className="auth-input-icon" size={20} />
             </div>
 
-            <div className="auth-input-group">
+            <div className="form-group">
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Email</label>
               <input 
                 type="email" 
-                className="auth-input" 
-                placeholder="Email Address"
-                required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="form-control" 
+                placeholder="Enter your email" 
+                style={{ padding: '12px 16px', fontSize: '16px' }}
+                disabled={loading}
               />
-              <Mail className="auth-input-icon" size={20} />
             </div>
-            
-            <div className="auth-input-group mb-8">
+
+            <div className="form-group">
+              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Password</label>
               <input 
                 type="password" 
-                className="auth-input" 
-                placeholder="Password"
-                required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="form-control" 
+                placeholder="••••••••" 
+                style={{ padding: '12px 16px', fontSize: '16px' }}
+                disabled={loading}
               />
-              <Lock className="auth-input-icon" size={20} />
             </div>
-            
-            <button type="submit" className="auth-btn" disabled={loading}>
-              {loading ? 'Creating workspace...' : 'Register'}
-              {!loading && <ArrowRight size={20} />}
+
+            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: '8px' }} disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'} {!loading && <ArrowRight size={18} />}
             </button>
           </form>
-          
-          <div className="mt-8 text-center text-sm text-slate-500">
-            Already have an account? <br className="mb-2"/>
-            <Link to="/login" className="auth-link">Sign In to Mission Control</Link>
-          </div>
+
+          <p style={{ textAlign: 'center', marginTop: 'var(--space-2xl)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+            Already have an account? <Link to="/login" style={{ color: 'var(--color-cobalt)', fontWeight: 600, textDecoration: 'none' }}>Sign in</Link>
+          </p>
+
         </div>
       </div>
     </div>
