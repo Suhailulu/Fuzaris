@@ -388,8 +388,9 @@ END $$;
 
 -- Organizations access
 CREATE POLICY org_read ON organizations FOR SELECT TO authenticated USING (id = get_user_org_id());
+CREATE POLICY org_insert ON organizations FOR INSERT TO authenticated WITH CHECK (true);
 
 -- Profiles access
 CREATE POLICY profiles_read ON profiles FOR SELECT TO authenticated USING (organization_id = get_user_org_id());
+CREATE POLICY profiles_insert ON profiles FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
 CREATE POLICY profiles_update ON profiles FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
-
