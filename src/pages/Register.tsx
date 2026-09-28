@@ -1,36 +1,45 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Map, ArrowRight, ArrowLeft, ShieldCheck, Globe, CheckCircle2 } from 'lucide-react';
+import { Map, ArrowRight, ArrowLeft, AlertCircle, ShieldCheck, Globe, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 
-export function Register() {
-  const [fullName, setFullName] = useState('');
-  const [orgName, setOrgName] = useState('');
+export default function Register() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [roleId, setRoleId] = useState('Expedition Manager');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [orgName, setOrgName] = useState('');
+  const [designation, setDesignation] = useState('');
   
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const ROLES = [
+    { id: 'Expedition Manager', title: 'Expedition Manager' },
+    { id: 'Logistics Officer', title: 'Logistics Officer' },
+    { id: 'Inventory & Asset Officer', title: 'Inventory & Asset Officer' },
+    { id: 'Personnel Officer', title: 'Personnel Officer' },
+    { id: 'Emergency Response Officer', title: 'Emergency Response Officer' },
+    { id: 'ADMIN', title: 'Command Center Admin' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!fullName || !email || !password || !orgName) {
-      setError('Please fill in all fields');
+    const finalOrgName = orgName || 'PolarOps Global';
+
+    if (!name || !email || !password || !finalOrgName) {
+      setError('Please fill in all required fields');
       return;
     }
 
-    setLoading(true);
     try {
-      await register(email, password, fullName, orgName);
+      await register(email, password, name, finalOrgName, roleId, designation);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Unable to register. Please try again.');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Registration failed');
     }
   };
 
@@ -111,84 +120,140 @@ export function Register() {
             <h2 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-navy)', marginBottom: '8px' }}>
               Create an account
             </h2>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-md)' }}>
+            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>
               Join PolarOps Mission Control
             </p>
           </div>
 
           {error && (
             <div style={{ 
-              padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FCA5A5', 
-              color: '#DC2626', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)',
-              fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: '8px'
+              background: 'var(--color-danger-bg)', color: 'var(--color-danger)', 
+              padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', 
+              fontSize: 'var(--text-sm)', marginBottom: 'var(--space-xl)',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
             }}>
-              {error}
+              <AlertCircle size={18} /> {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            
-            <div className="form-group">
+            <div>
               <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Full Name</label>
               <input 
                 type="text" 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="form-control" 
-                placeholder="e.g. Dr. Jane Smith" 
-                style={{ padding: '12px 16px', fontSize: '16px' }}
-                disabled={loading}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Organization Name</label>
-              <input 
-                type="text" 
-                value={orgName}
-                onChange={(e) => setOrgName(e.target.value)}
-                className="form-control" 
-                placeholder="e.g. Polar Research Institute" 
-                style={{ padding: '12px 16px', fontSize: '16px' }}
-                disabled={loading}
+                value={name}
+                onChange={e => setName(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                  transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                placeholder="e.g. Dr. Jane Smith"
               />
             </div>
 
-            <div className="form-group">
+            <div>
               <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Email</label>
               <input 
                 type="email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="form-control" 
-                placeholder="Enter your email" 
-                style={{ padding: '12px 16px', fontSize: '16px' }}
-                disabled={loading}
+                onChange={e => setEmail(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                  transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                placeholder="jane@polar.com"
               />
             </div>
+            
+            <div className="grid-2" style={{ gap: 'var(--space-lg)' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Organization</label>
+                <input 
+                  type="text" 
+                  value={orgName}
+                  onChange={e => setOrgName(e.target.value)}
+                  style={{ 
+                    width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', 
+                    border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                    transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                  onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                  placeholder="e.g. NCPOR"
+                />
+              </div>
 
-            <div className="form-group">
-              <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Password</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="form-control" 
-                placeholder="••••••••" 
-                style={{ padding: '12px 16px', fontSize: '16px' }}
-                disabled={loading}
-              />
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Designation</label>
+                <input 
+                  type="text" 
+                  value={designation}
+                  onChange={e => setDesignation(e.target.value)}
+                  style={{ 
+                    width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', 
+                    border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                    transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                  onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                  placeholder="e.g. Senior Researcher"
+                />
+              </div>
+            </div>
+            
+            <div className="grid-2" style={{ gap: 'var(--space-lg)' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Password</label>
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  style={{ 
+                    width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', 
+                    border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                    transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                  onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Requested Role</label>
+                <select 
+                  value={roleId}
+                  onChange={e => setRoleId(e.target.value)}
+                  style={{ 
+                    width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)', 
+                    border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                    backgroundColor: 'white', transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                  onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                >
+                  {ROLES.map(r => (
+                    <option key={r.id} value={r.id}>{r.title}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: '8px' }} disabled={loading}>
-              {loading ? 'Creating Account...' : 'Create Account'} {!loading && <ArrowRight size={18} />}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px', justifyContent: 'center', fontSize: 'var(--text-md)', marginTop: '12px', borderRadius: 'var(--radius-md)' }}>
+              Create Account <ArrowRight size={18} />
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 'var(--space-2xl)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+          <div style={{ marginTop: 'var(--space-2xl)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
             Already have an account? <Link to="/login" style={{ color: 'var(--color-cobalt)', fontWeight: 600, textDecoration: 'none' }}>Sign in</Link>
-          </p>
-
+          </div>
         </div>
       </div>
     </div>

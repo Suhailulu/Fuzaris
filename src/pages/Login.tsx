@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Map, ArrowRight, ArrowLeft, ShieldCheck, Globe, CheckCircle2 } from 'lucide-react';
+import { Map, ArrowRight, ArrowLeft, AlertCircle, ShieldCheck, Globe, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 
-export function Login() {
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -20,14 +19,11 @@ export function Login() {
       return;
     }
 
-    setLoading(true);
     try {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Unable to sign in. Please check your credentials and try again.');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Invalid email or password');
     }
   };
 
@@ -108,61 +104,71 @@ export function Login() {
             <h2 style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-navy)', marginBottom: '8px' }}>
               Welcome back
             </h2>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-md)' }}>
+            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>
               Please enter your details to sign in.
             </p>
           </div>
 
           {error && (
             <div style={{ 
-              padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FCA5A5', 
-              color: '#DC2626', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)',
-              fontSize: 'var(--text-sm)', display: 'flex', alignItems: 'center', gap: '8px'
+              background: 'var(--color-danger-bg)', color: 'var(--color-danger)', 
+              padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', 
+              fontSize: 'var(--text-sm)', marginBottom: 'var(--space-xl)',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              border: '1px solid rgba(239, 68, 68, 0.2)'
             }}>
-              {error}
+              <AlertCircle size={18} /> {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-            
-            <div className="form-group">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
+            <div>
               <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)', marginBottom: '8px' }}>Email</label>
               <input 
                 type="email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="form-control" 
-                placeholder="Enter your email" 
-                style={{ padding: '12px 16px', fontSize: '16px' }}
-                disabled={loading}
+                onChange={e => setEmail(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                placeholder="Enter your email"
               />
             </div>
             
-            <div className="form-group">
+            <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <label style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-navy)' }}>Password</label>
-                <a href="#" style={{ fontSize: 'var(--text-sm)', color: 'var(--color-cobalt)', textDecoration: 'none', fontWeight: 500 }}>Forgot password?</a>
+                <a href="#" style={{ fontSize: 'var(--text-sm)', color: 'var(--color-cobalt)', fontWeight: 500, textDecoration: 'none' }}>Forgot password?</a>
               </div>
               <input 
                 type="password" 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="form-control" 
-                placeholder="••••••••" 
-                style={{ padding: '12px 16px', fontSize: '16px' }}
-                disabled={loading}
+                onChange={e => setPassword(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)', 
+                  border: '1px solid var(--color-border)', outline: 'none', fontSize: 'var(--text-md)',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--color-cobalt)'}
+                onBlur={e => e.target.style.borderColor = 'var(--color-border)'}
+                placeholder="••••••••"
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: '8px' }} disabled={loading}>
-              {loading ? 'Authenticating...' : 'Sign in'} {!loading && <ArrowRight size={18} />}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px', justifyContent: 'center', fontSize: 'var(--text-md)', marginTop: '8px', borderRadius: 'var(--radius-md)' }}>
+              Sign in <ArrowRight size={18} />
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 'var(--space-2xl)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+          <div style={{ marginTop: 'var(--space-2xl)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
             Don't have an account? <Link to="/register" style={{ color: 'var(--color-cobalt)', fontWeight: 600, textDecoration: 'none' }}>Sign up</Link>
-          </p>
-
+          </div>
         </div>
       </div>
     </div>

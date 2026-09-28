@@ -19,6 +19,12 @@ export function PersonnelDetail() {
     movement_type: 'STATION_TRANSFER' as PersonnelMovementType,
     to_location: '', notes: '', status: 'IN_TRANSIT' as any
   });
+  
+  const [showStatusForm, setShowStatusForm] = useState(false);
+  const [newStatus, setNewStatus] = useState<any>('');
+  const [showExpeditionForm, setShowExpeditionForm] = useState(false);
+  const [newExpeditionId, setNewExpeditionId] = useState<string>('');
+  
   const [error, setError] = useState('');
 
   const loadData = async () => {
@@ -64,6 +70,30 @@ export function PersonnelDetail() {
       loadData();
     } catch (err: any) {
       setError(err.message || 'Error updating status');
+    }
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!organization || !id || !newStatus) return;
+    try {
+      await api.updatePersonnel(organization.id, id, { status: newStatus });
+      setShowStatusForm(false);
+      loadData();
+    } catch (err: any) {
+      setError(err.message || 'Error updating status');
+    }
+  };
+
+  const handleReassignExpedition = async () => {
+    if (!organization || !id) return;
+    try {
+      await api.updatePersonnel(organization.id, id, { 
+        expedition_id: newExpeditionId === 'NONE' ? null : newExpeditionId 
+      } as any);
+      setShowExpeditionForm(false);
+      loadData();
+    } catch (err: any) {
+      setError(err.message || 'Error reassigning expedition');
     }
   };
 
@@ -206,8 +236,56 @@ export function PersonnelDetail() {
           <div className="card">
             <h2 className="card-title mb-4">Assignment Actions</h2>
             <p className="text-sm text-muted mb-4">Change deployment status or assign to a different expedition.</p>
-            <button className="btn btn-outline w-full mb-2" disabled={user?.role === 'VIEWER'}>Change Status</button>
-            <button className="btn btn-outline w-full" disabled={user?.role === 'VIEWER'}>Reassign Expedition</button>
+            
+            {!showStatusForm ? (
+              <button 
+                className="btn btn-outline w-full mb-2" 
+                onClick={() => { setShowStatusForm(true); setShowExpeditionForm(false); setNewStatus(personnel.status); }}
+                disabled={user?.role === 'VIEWER'}
+              >
+                Change Status
+              </button>
+            ) : (
+              <div className="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+                <label className="form-label text-sm">New Status</label>
+                <select className="form-input text-sm mb-2" value={newStatus} onChange={e => setNewStatus(e.target.value)}>
+                  <option value="AVAILABLE">Available</option>
+                  <option value="DEPLOYED">Deployed (Field)</option>
+                  <option value="ON_STATION">On Station</option>
+                  <option value="IN_TRANSIT">In Transit</option>
+                  <option value="ON_LEAVE">On Leave</option>
+                  <option value="EMERGENCY">Emergency</option>
+                </select>
+                <div className="flex gap-2">
+                  <button className="btn btn-outline btn-sm flex-1" onClick={() => setShowStatusForm(false)}>Cancel</button>
+                  <button className="btn btn-primary btn-sm flex-1" onClick={handleUpdateStatus}>Save</button>
+                </div>
+              </div>
+            )}
+
+            {!showExpeditionForm ? (
+              <button 
+                className="btn btn-outline w-full" 
+                onClick={() => { setShowExpeditionForm(true); setShowStatusForm(false); setNewExpeditionId(personnel.expedition_id || 'NONE'); }}
+                disabled={user?.role === 'VIEWER'}
+              >
+                Reassign Expedition
+              </button>
+            ) : (
+              <div className="p-3 bg-gray-50 rounded border border-gray-200">
+                <label className="form-label text-sm">Target Expedition</label>
+                <select className="form-input text-sm mb-2" value={newExpeditionId} onChange={e => setNewExpeditionId(e.target.value)}>
+                  <option value="NONE">-- Unassigned --</option>
+                  {expeditions.map(e => (
+                    <option key={e.id} value={e.id}>{e.expedition_code} ({e.name})</option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <button className="btn btn-outline btn-sm flex-1" onClick={() => setShowExpeditionForm(false)}>Cancel</button>
+                  <button className="btn btn-primary btn-sm flex-1" onClick={handleReassignExpedition}>Save</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

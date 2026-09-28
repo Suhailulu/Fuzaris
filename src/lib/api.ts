@@ -259,6 +259,12 @@ export const api = {
     return newPers;
   },
 
+  updatePersonnel: async (orgId: string, id: string, data: Partial<Personnel>): Promise<Personnel> => {
+    const { data: updated, error } = await supabase.from('personnel').update(data).eq('id', id).eq('organization_id', orgId).select().single();
+    if (error) throw error;
+    return updated;
+  },
+
   getPersonnelMovements: async (orgId: string, personnelId: string): Promise<PersonnelMovement[]> => {
     const { data, error } = await supabase.from('personnel_movements').select('*').eq('personnel_id', personnelId);
     if (error) throw error;
@@ -349,6 +355,11 @@ export const api = {
     return data || [];
   },
 
+  updateEmergencyStatus: async (orgId: string, id: string, status: string) => {
+    const { error } = await supabase.from('emergency_events').update({ status }).eq('id', id).eq('organization_id', orgId);
+    if (error) throw error;
+  },
+
   getRecommendations: async (orgId: string, alertId: string): Promise<Recommendation[]> => {
     const { data, error } = await supabase.from('recommendations').select('*').eq('alert_id', alertId);
     if (error) throw error;
@@ -376,5 +387,95 @@ export const api = {
     await supabase.from('response_tasks').update(updates).eq('id', taskId);
   },
 
-  evaluateRisks: async (orgId: string, user: User) => {}
+  evaluateRisks: async (orgId: string, user: User) => {
+    // 1. Check Cargo Delays
+    const cargoList = await api.getCargoList(orgId);
+    const delayedCargo = cargoList.filter(c => c.status === 'DELAYED');
+    for (const cargo of delayedCargo) {
+      await createAlertIfNotExists(orgId, user, {
+        alert_code: `ALT-CG-${cargo.cargo_code}`,
+        title: `Cargo Delayed: ${cargo.name}`,
+        description: `Cargo ${cargo.cargo_code} is marked as DELAYED. This may impact expedition timeline.`,
+        alert_type: 'CARGO_DELAY',
+        severity: 'MEDIUM',
+        source_entity_type: 'cargo',
+        source_entity_id: cargo.id,
+        location_id: cargo.current_location,
+        expedition_id: cargo.expedition_id,
+        risk_score: 55,
+      });
+    }
+
+    // 2. Check Inventory Levels
+    const inventory = await api.getInventoryItems(orgId);
+    const criticalInventory = inventory.filter(i => i.status === 'CRITICAL' || i.status === 'OUT_OF_STOCK');
+    for (const item of criticalInventory) {
+      await createAlertIfNotExists(orgId, user, {
+        alert_code: `ALT-INV-${item.item_code}`,
+        title: `Critical Inventory Level: ${item.name}`,
+        description: `Inventory for ${item.name} is ${item.status}. Remaining quantity: ${item.quantity} ${item.unit}. Minimum threshold is ${item.minimum_threshold}.`,
+        alert_type: 'LOW_INVENTORY',
+        severity: item.status === 'OUT_OF_STOCK' ? 'CRITICAL' : 'HIGH',
+        source_entity_type: 'inventory',
+        source_entity_id: item.id,
+        location_id: item.station,
+        risk_score: item.status === 'OUT_OF_STOCK' ? 90 : 75,
+      });
+    }
+
+    // 3. Check Asset Status
+    const assets = await api.getAssets(orgId);
+    const maintenanceAssets = assets.filter(a => a.status === 'MAINTENANCE_DUE' || a.status === 'DAMAGED');
+    for (const asset of maintenanceAssets) {
+      await createAlertIfNotExists(orgId, user, {
+        alert_code: `ALT-AST-${asset.asset_code}`,
+        title: `Asset Requires Attention: ${asset.name}`,
+        description: `Asset ${asset.asset_code} is currently ${asset.status}. Condition is ${asset.condition}.`,
+        alert_type: asset.status === 'DAMAGED' ? 'ASSET_FAILURE' : 'MAINTENANCE',
+        severity: asset.status === 'DAMAGED' ? 'HIGH' : 'MEDIUM',
+        source_entity_type: 'asset',
+        source_entity_id: asset.id,
+        location_id: asset.location,
+        risk_score: asset.status === 'DAMAGED' ? 80 : 40,
+      });
+    }
+    // 4. Environmental & Weather Risks (Simulation)
+    const activeExpeditions = await api.getExpeditions(orgId);
+    for (const exp of activeExpeditions.filter(e => e.status === 'DEPLOYED' || e.status === 'ON_STATION')) {
+      // 10% chance to simulate a severe weather alert for active expeditions
+      if (Math.random() < 0.1) {
+        await createAlertIfNotExists(orgId, user, {
+          alert_code: `ALT-WTH-${exp.expedition_code}`,
+          title: `Severe Weather Warning: ${exp.name}`,
+          description: `Temperature drop below -50°C and high winds detected near ${exp.destination}. Ensure all personnel are inside.`,
+          alert_type: 'WEATHER',
+          severity: 'CRITICAL',
+          source_entity_type: 'expedition',
+          source_entity_id: exp.id,
+          location_id: exp.destination,
+          expedition_id: exp.id,
+          risk_score: 95,
+        });
+      }
+    }
+  }
 };
+
+async function createAlertIfNotExists(orgId: string, user: User, alertData: Partial<Alert>) {
+  // Check if an open/acknowledged alert for this specific entity already exists
+  const { data: existing } = await supabase.from('alerts')
+    .select('id')
+    .eq('organization_id', orgId)
+    .eq('source_entity_id', alertData.source_entity_id!)
+    .in('status', ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS']);
+    
+  if (existing && existing.length > 0) {
+    return; // Alert already exists and is active
+  }
+
+  // Create new alert
+  await api.createAlert(orgId, user, {
+    ...alertData,
+    status: 'OPEN',
+  } as any);
+}

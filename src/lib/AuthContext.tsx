@@ -9,7 +9,9 @@ export interface User {
   full_name: string;
   email: string;
   phone: string;
-  role: Role;
+  role: string;
+  status: 'PENDING' | 'ACTIVE' | 'INACTIVE';
+  designation?: string;
   created_at: string;
   updated_at: string;
 }
@@ -27,7 +29,7 @@ interface AuthContextType {
   user: User | null;
   organization: Organization | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, organizationName: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string, organizationName: string, role: string, designation?: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   loading: boolean;
@@ -104,22 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, fullName: string, organizationName: string) => {
+  const register = async (email: string, password: string, fullName: string, organizationName: string, role: string, designation: string = '') => {
     setError(null);
     setLoading(true);
 
     try {
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          name: organizationName,
-          code: organizationName.substring(0, 3).toUpperCase(),
-        })
-        .select()
-        .single();
-
-      if (orgError) throw orgError;
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -128,6 +119,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authError) throw authError;
 
       if (authData.user) {
+        const orgCode = organizationName.substring(0, 3).toUpperCase();
+        let { data: orgData, error: orgLookupError } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('code', orgCode)
+          .maybeSingle();
+
+        if (orgLookupError) throw orgLookupError;
+
+        if (!orgData) {
+          const { data: newOrgData, error: orgError } = await supabase
+            .from('organizations')
+            .insert({
+              name: organizationName,
+              code: orgCode,
+            })
+            .select()
+            .single();
+
+          if (orgError) throw orgError;
+          orgData = newOrgData;
+        }
+
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -135,10 +149,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             organization_id: orgData.id,
             full_name: fullName,
             email,
-            role: 'ADMIN',
+            role: 'PENDING',
+            status: 'PENDING',
+            designation,
           });
 
         if (profileError) throw profileError;
+
+        const { error: requestError } = await supabase
+          .from('access_requests')
+          .insert({
+            user_id: authData.user.id,
+            full_name: fullName,
+            email,
+            organization: organizationName,
+            designation,
+            requested_role: role,
+            status: 'PENDING'
+          });
+
+        if (requestError) throw requestError;
+
         await fetchProfile(authData.user.id);
       }
     } catch (err: any) {
