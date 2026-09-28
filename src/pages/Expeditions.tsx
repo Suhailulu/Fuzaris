@@ -105,8 +105,10 @@ export function Expeditions() {
           <select className="form-input" style={{ width: 'auto' }}>
             <option value="">All Statuses</option>
             <option value="PLANNING">Planning</option>
-            <option value="ACTIVE">Active</option>
-            <option value="DELAYED">Delayed</option>
+            <option value="PREPARATION">Preparation</option>
+            <option value="DEPLOYED">Deployed</option>
+            <option value="ON_STATION">On Station</option>
+            <option value="DEMOBILIZING">Demobilizing</option>
             <option value="COMPLETED">Completed</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
@@ -150,8 +152,12 @@ export function Expeditions() {
                       borderRadius: '1rem', 
                       fontSize: '0.75rem', 
                       fontWeight: 600,
-                      backgroundColor: exp.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(100, 116, 139, 0.1)',
-                      color: exp.status === 'ACTIVE' ? 'var(--color-success)' : 'var(--color-text-muted)'
+                      backgroundColor: exp.status === 'ON_STATION' || exp.status === 'DEPLOYED' ? 'rgba(16, 185, 129, 0.1)' : 
+                                       exp.status === 'PREPARATION' || exp.status === 'DEMOBILIZING' ? 'rgba(59, 130, 246, 0.1)' :
+                                       'rgba(100, 116, 139, 0.1)',
+                      color: exp.status === 'ON_STATION' || exp.status === 'DEPLOYED' ? 'var(--color-success)' : 
+                             exp.status === 'PREPARATION' || exp.status === 'DEMOBILIZING' ? 'var(--color-primary)' :
+                             'var(--color-text-muted)'
                     }}>
                       {exp.status}
                     </span>

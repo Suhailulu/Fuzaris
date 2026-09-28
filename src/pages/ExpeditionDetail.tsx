@@ -17,6 +17,7 @@ export function ExpeditionDetail() {
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [activeTab, setActiveTab] = useState('Overview');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
   useEffect(() => { const loadAsync = async () => {
     if (organization && id) {
@@ -40,6 +41,20 @@ export function ExpeditionDetail() {
   const delayedCargo = cargoList.filter(c => c.status === 'DELAYED').length;
   const openAlerts = alerts.filter(a => a.status === 'OPEN' || a.status === 'ACKNOWLEDGED' || a.status === 'IN_PROGRESS');
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (!organization || !user || !expedition) return;
+    setIsUpdatingStatus(true);
+    try {
+      const updated = await api.updateExpedition(organization.id, user, expedition.id, { status: newStatus as any });
+      setExpedition(updated);
+      setHistory(await api.getExpeditionHistory(organization.id, expedition.id));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-start justify-between mb-8">
@@ -55,7 +70,29 @@ export function ExpeditionDetail() {
           </div>
           <p className="text-lg text-muted">{expedition.name}</p>
         </div>
-        <button className="btn btn-outline">Edit Expedition</button>
+        
+        {user?.role === 'Expedition Manager' || user?.role === 'ADMIN' ? (
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-muted">Update Phase:</span>
+            <select 
+              className="form-input py-1.5 h-auto text-sm" 
+              value={expedition.status}
+              onChange={e => handleStatusChange(e.target.value)}
+              disabled={isUpdatingStatus}
+              style={{ minWidth: '160px' }}
+            >
+              <option value="PLANNING">Planning</option>
+              <option value="PREPARATION">Preparation</option>
+              <option value="DEPLOYED">Deployed</option>
+              <option value="ON_STATION">On Station</option>
+              <option value="DEMOBILIZING">Demobilizing</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+        ) : (
+          <button className="btn btn-outline">Edit Expedition</button>
+        )}
       </div>
 
       <div className="flex gap-4 mb-6" style={{ borderBottom: '1px solid var(--color-border)', overflowX: 'auto' }}>

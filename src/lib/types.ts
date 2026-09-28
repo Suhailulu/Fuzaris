@@ -1,4 +1,4 @@
-export type ExpeditionStatus = 'PLANNING' | 'ACTIVE' | 'DELAYED' | 'COMPLETED' | 'CANCELLED';
+export type ExpeditionStatus = 'PLANNING' | 'PREPARATION' | 'DEPLOYED' | 'ON_STATION' | 'DEMOBILIZING' | 'COMPLETED' | 'CANCELLED';
 export type Priority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type TransportMode = 'SHIP' | 'AIRCRAFT' | 'LAND' | 'MIXED';
 

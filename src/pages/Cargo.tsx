@@ -38,9 +38,26 @@ export function CargoList() {
     if (formData.weight < 0) return setError('Weight cannot be negative.');
     if (formData.volume < 0) return setError('Volume cannot be negative.');
     try {
-      await api.createCargo(organization.id, user, formData as any);
+      // Auto-generate sequential Cargo Code (CG-001, CG-002, etc.)
+      const nums = cargoList
+        .map(c => c.cargo_code ? parseInt(c.cargo_code.replace('CG-', '')) : 0)
+        .filter(n => !isNaN(n));
+      const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+      const generatedCode = `CG-${String(nextNum).padStart(3, '0')}`;
+
+      const finalData: any = { ...formData, cargo_code: generatedCode };
+      if (!finalData.expedition_id) {
+        delete finalData.expedition_id;
+      }
+      
+      await api.createCargo(organization.id, user, finalData);
       setShowCreate(false);
       setCargoList(await api.getCargoList(organization.id));
+      // Reset form
+      setFormData({
+        cargo_code: '', name: '', description: '', category: 'GENERAL' as any, quantity: 1, unit: 'pcs',
+        weight: 0, volume: 0, priority: 'MEDIUM' as any, origin: '', destination: '', current_location: '', expected_arrival: '', status: 'PLANNED' as any, expedition_id: ''
+      });
     } catch (err: any) {
       setError(err.message || 'Error creating cargo');
     }
@@ -53,9 +70,7 @@ export function CargoList() {
         {error && <div className="mb-4 text-sm" style={{ padding: '0.75rem', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--color-critical)' }}>{error}</div>}
         <form onSubmit={handleCreate}>
           <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="form-group"><label className="form-label">Cargo Code</label><input required className="form-input" value={formData.cargo_code} onChange={e => setFormData({...formData, cargo_code: e.target.value.trim()})} placeholder="CG-001" /></div>
             <div className="form-group"><label className="form-label">Name</label><input required className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Food Rations" /></div>
-            
             <div className="form-group"><label className="form-label">Category</label><select className="form-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as any})}><option value="FOOD">Food</option><option value="FUEL">Fuel</option><option value="MEDICAL">Medical</option><option value="SCIENTIFIC">Scientific</option><option value="MECHANICAL">Mechanical</option><option value="GENERAL">General</option></select></div>
             <div className="form-group"><label className="form-label">Expedition</label><select className="form-input" value={formData.expedition_id} onChange={e => setFormData({...formData, expedition_id: e.target.value})}><option value="">None</option>{expeditions.map(e => <option key={e.id} value={e.id}>{e.expedition_code} - {e.name}</option>)}</select></div>
 
