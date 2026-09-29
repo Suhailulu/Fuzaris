@@ -90,10 +90,7 @@ export default function Register() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--space-xl)', color: 'rgba(255,255,255,0.5)', fontSize: 'var(--text-sm)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={16} color="#10B981"/> SOC2 Compliant</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={16} color="#60A5FA"/> Offline Sync</span>
-          </div>
+
         </div>
       </div>
 
