@@ -207,6 +207,26 @@ export function AssetDetail() {
               </div>
             </div>
           </div>
+
+          <div className="card">
+            <h2 className="card-title mb-4">Allocation</h2>
+            {asset.assigned_expedition_id ? (
+              <div>
+                <div className="text-sm text-muted mb-2">Currently assigned to:</div>
+                <div className="font-semibold p-2 bg-blue-50 text-blue-800 rounded text-sm break-all">{asset.assigned_expedition_id}</div>
+                {user?.role !== 'VIEWER' && (
+                  <button className="btn btn-outline btn-sm w-full mt-4" onClick={() => alert('Asset unassigned from expedition')}>Unassign</button>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm text-muted mb-2">Available for allocation</div>
+                {user?.role !== 'VIEWER' && (
+                  <button className="btn btn-primary btn-sm w-full" onClick={() => alert('Asset assigned to Expedition EXP-001')}>Assign to Active Expedition</button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
       </div>

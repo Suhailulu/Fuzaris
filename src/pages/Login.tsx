@@ -57,7 +57,7 @@ export default function Login() {
               <Map size={28} />
             </div>
             <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'white' }}>
-              PolarOps
+              Fuzaris
             </span>
           </div>
 
@@ -74,10 +74,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 'var(--space-xl)', color: 'rgba(255,255,255,0.5)', fontSize: 'var(--text-sm)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={16} color="#10B981"/> SOC2 Compliant</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Globe size={16} color="#60A5FA"/> Offline Sync</span>
-          </div>
+
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useAuth } from '../lib/AuthContext';
 import { api } from '../lib/api';
 import type { Expedition, Cargo, ExpeditionStatusHistory, Asset, InventoryItem, Personnel, Alert } from '../lib/types';
 import { Package, Settings2, Users, Box, AlertTriangle } from 'lucide-react';
+import { RouteMap } from '../shared/components/RouteMap';
 
 export function ExpeditionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -96,7 +97,7 @@ export function ExpeditionDetail() {
       </div>
 
       <div className="flex gap-4 mb-6" style={{ borderBottom: '1px solid var(--color-border)', overflowX: 'auto' }}>
-        {['Overview', 'Cargo', 'Inventory', 'Assets', 'Personnel', 'Timeline', 'Alerts & Risk'].map(tab => (
+        {['Overview', 'Route Map', 'Cargo', 'Inventory', 'Assets', 'Personnel', 'Timeline', 'Alerts & Risk'].map(tab => (
           <button 
             key={tab}
             className="pb-2 font-semibold whitespace-nowrap"
@@ -179,6 +180,16 @@ export function ExpeditionDetail() {
               </ul>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'Route Map' && (
+        <div className="card">
+          <h2 className="card-title mb-4">Live Tracking & Routing</h2>
+          <RouteMap 
+            originName={expedition.origin} 
+            destinationName={expedition.destination}
+          />
         </div>
       )}
 

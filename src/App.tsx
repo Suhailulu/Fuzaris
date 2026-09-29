@@ -15,6 +15,8 @@ import PendingAccess from './pages/PendingAccess';
 import AccessRequests from './pages/AccessRequests';
 import { Reports } from './pages/Reports';
 import { ActivityFeed } from './pages/Activity';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
 
 function AppContent() {
   const { user } = useAuth();
@@ -25,6 +27,8 @@ function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );

@@ -18,7 +18,7 @@ export default function Landing() {
             <Map size={24} />
           </div>
           <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-navy)' }}>
-            PolarOps
+            Fuzaris
           </span>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
@@ -40,11 +40,9 @@ export default function Landing() {
         <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50%', height: '150%', background: 'radial-gradient(ellipse at center, rgba(96,165,250,0.1) 0%, rgba(11,20,38,0) 70%)', transform: 'rotate(15deg)' }} />
         
         <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: 'var(--radius-full)', marginBottom: 'var(--space-xl)', fontSize: 'var(--text-sm)' }}>
-            <Globe size={16} color="#60A5FA" /> Enterprise Mission Control
-          </div>
+
           <h1 style={{ fontSize: 'var(--text-3xl)', fontFamily: 'var(--font-heading)', marginBottom: 'var(--space-lg)', color: 'white', lineHeight: 1.2 }}>
-            Integrated Polar Expedition <br/>
+            Integrated Fuzaris Expedition <br/>
             <span style={{ color: '#60A5FA' }}>Logistics & Asset Management</span>
           </h1>
           <p style={{ fontSize: 'var(--text-lg)', color: 'rgba(255,255,255,0.7)', margin: '0 auto var(--space-2xl)', lineHeight: 1.6 }}>
@@ -149,16 +147,14 @@ export default function Landing() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
             <Map size={20} color="var(--color-cobalt)" />
-            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>PolarOps Systems</span>
+            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Fuzaris Systems</span>
           </div>
           <div style={{ display: 'flex', gap: 'var(--space-xl)', fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
-            <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-            <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
-            <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Documentation</a>
-            <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Contact Support</a>
+            <Link to="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link to="/contact" style={{ color: 'inherit', textDecoration: 'none' }}>Contact Support</Link>
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>
-            &copy; 2026 PolarOps Ltd. All rights reserved.
+            &copy; 2026 Fuzaris Ltd. All rights reserved.
           </div>
         </div>
       </footer>
