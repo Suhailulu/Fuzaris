@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from './supabase';
+import { useConnectivity } from './offline/connectivity';
 
 export type Role = 'ADMIN' | 'EXPEDITION_MANAGER' | 'STATION_OFFICER' | 'VIEWER';
 
@@ -199,8 +200,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(updated);
   };
 
+  const isOnline = useConnectivity();
+
   return (
     <AuthContext.Provider value={{ user, organization, login, register, logout, updateProfile, loading, error }}>
+      {!isOnline && (
+        <div style={{ backgroundColor: '#ef4444', color: 'white', textAlign: 'center', padding: '6px', fontSize: '13px', fontWeight: 'bold' }}>
+          🔴 Offline — Changes will sync automatically when internet returns
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );
