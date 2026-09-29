@@ -28,7 +28,7 @@ export default function Register() {
     e.preventDefault();
     setError('');
     
-    const finalOrgName = orgName || 'PolarOps Global';
+    const finalOrgName = orgName || 'Fuzaris Global';
 
     if (!name || !email || !password || !finalOrgName) {
       setError('Please fill in all required fields');
@@ -73,7 +73,7 @@ export default function Register() {
               <Map size={28} />
             </div>
             <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'white' }}>
-              PolarOps
+              Fuzaris
             </span>
           </div>
 
@@ -121,7 +121,7 @@ export default function Register() {
               Create an account
             </h2>
             <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>
-              Join PolarOps Mission Control
+              Join Fuzaris Mission Control
             </p>
           </div>
 

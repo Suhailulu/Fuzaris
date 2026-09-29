@@ -57,7 +57,7 @@ export default function Login() {
               <Map size={28} />
             </div>
             <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'white' }}>
-              PolarOps
+              Fuzaris
             </span>
           </div>
 

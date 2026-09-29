@@ -38,7 +38,7 @@ export default function Sidebar() {
           <Map size={20} />
         </div>
         <div className="sidebar-brand-text">
-          <span className="sidebar-brand-name">Polar Expedition</span>
+          <span className="sidebar-brand-name">Fuzaris</span>
           <span className="sidebar-brand-sub">Logistics & Asset Mgmt</span>
         </div>
       </div>
