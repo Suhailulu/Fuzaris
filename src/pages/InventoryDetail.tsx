@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { TrendingDown } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { api } from '../lib/api';
 import type { InventoryItem, InventoryTransaction, TransactionType } from '../lib/types';
@@ -118,6 +119,31 @@ export function InventoryDetail() {
           </div>
 
           <div className="card">
+            <h2 className="card-title mb-4 flex items-center gap-2">
+              <TrendingDown size={18} className="text-primary" /> Predictive Analytics
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs text-muted mb-1">Avg Daily Consumption</div>
+                <div className="font-medium">{item.daily_consumption_rate || (item.quantity > 0 ? (item.quantity / 45).toFixed(1) : 0)} {item.unit}/day</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted mb-1">Estimated Runway</div>
+                <div className="font-medium" style={{ color: item.status === 'HEALTHY' ? 'inherit' : 'var(--color-warning)' }}>
+                  {item.quantity > 0 ? Math.floor(item.quantity / (item.daily_consumption_rate || Math.max(1, (item.quantity / 45)))) : 0} days
+                </div>
+              </div>
+              <div className="col-span-2 pt-3 border-t border-gray-100">
+                <div className="text-xs text-muted mb-1">Recommended Reorder Quantity</div>
+                <div className="font-medium text-primary">
+                  {Math.max(0, (item.minimum_threshold * 2) - item.quantity)} {item.unit}
+                </div>
+                <div className="text-xs text-muted mt-1">Based on {item.lead_time_days || 14} days lead time</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
             <div className="flex justify-between items-center mb-6">
               <h2 className="card-title">Transaction History</h2>
               {user?.role !== 'VIEWER' && (
@@ -195,12 +221,28 @@ export function InventoryDetail() {
         {/* Right Column */}
         <div className="flex flex-col gap-6">
           <div className="card">
-            <h2 className="card-title mb-4">Assigned Expedition</h2>
-            {item.assigned_expedition_id ? (
-              <div className="text-sm">Assigned to ID: {item.assigned_expedition_id}</div>
-            ) : (
-              <div className="text-sm text-muted">No active assignment. Item is station inventory.</div>
-            )}
+            <h2 className="card-title mb-4">Tracking & Assignment</h2>
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="text-xs text-muted mb-1">Assigned Expedition</div>
+                {item.assigned_expedition_id ? (
+                  <div className="font-medium p-2 bg-blue-50 text-blue-800 rounded text-sm">{item.assigned_expedition_id}</div>
+                ) : (
+                  <div className="text-sm font-medium text-muted">None (Station Inventory)</div>
+                )}
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-xs text-muted mb-1">In-Transit Cargo Link</div>
+                {item.cargo_id ? (
+                  <div className="font-medium text-blue-600">Cargo Link: {item.cargo_id}</div>
+                ) : (
+                  <div className="text-sm text-muted">Not currently in transit</div>
+                )}
+                {user?.role !== 'VIEWER' && !item.cargo_id && (
+                  <button className="btn btn-outline btn-sm w-full mt-3" onClick={() => alert('Link to Cargo shipment')}>Link to Cargo</button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

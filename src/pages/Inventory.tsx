@@ -3,7 +3,7 @@ import { useAuth } from '../lib/AuthContext';
 import { api } from '../lib/api';
 import type { InventoryItem } from '../lib/types';
 import { Link } from 'react-router-dom';
-import { Archive, Plus, Search } from 'lucide-react';
+import { Archive, Plus, Search, ScanBarcode, RotateCcw } from 'lucide-react';
 
 export function Inventory() {
   const { organization, user } = useAuth();
@@ -91,9 +91,14 @@ export function Inventory() {
           <p className="text-muted">Manage operational supplies and track stock thresholds.</p>
         </div>
         {user?.role !== 'VIEWER' && (
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-            <Plus size={18} className="mr-2" /> Add Item
-          </button>
+          <div className="flex gap-2">
+            <button className="btn btn-outline" onClick={() => alert('Barcode scanner activated (simulated)')}>
+              <ScanBarcode size={18} className="mr-2" /> Scan Item
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+              <Plus size={18} className="mr-2" /> Add Item
+            </button>
+          </div>
         )}
       </div>
 
@@ -171,13 +176,23 @@ export function Inventory() {
                       <div className="text-xs text-muted">{i.storage_location}</div>
                     </td>
                     <td style={{ padding: '1rem 1.5rem' }}>
-                      <span className="badge" style={{ 
-                        backgroundColor: i.status === 'HEALTHY' ? 'rgba(16, 185, 129, 0.1)' : i.status === 'LOW' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                        color: i.status === 'HEALTHY' ? 'var(--color-success)' : i.status === 'LOW' ? 'var(--color-warning)' : 'var(--color-critical)',
-                        padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 
-                      }}>
-                        {i.status.replace(/_/g, ' ')}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="badge" style={{ 
+                          backgroundColor: i.status === 'HEALTHY' ? 'rgba(16, 185, 129, 0.1)' : i.status === 'LOW' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                          color: i.status === 'HEALTHY' ? 'var(--color-success)' : i.status === 'LOW' ? 'var(--color-warning)' : 'var(--color-critical)',
+                          padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 
+                        }}>
+                          {i.status.replace(/_/g, ' ')}
+                        </span>
+                        {(i.status === 'LOW' || i.status === 'CRITICAL' || i.status === 'OUT_OF_STOCK') && !i.reorder_requested && (
+                          <button className="btn btn-outline py-1 px-2 text-xs" style={{ minHeight: 'auto' }} onClick={() => alert(`Auto-restock triggered for ${i.name}`)}>
+                            <RotateCcw size={12} className="mr-1" /> Restock
+                          </button>
+                        )}
+                        {i.reorder_requested && (
+                          <span className="text-xs text-muted font-semibold">Restock pending</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

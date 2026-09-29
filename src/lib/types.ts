@@ -107,6 +107,12 @@ export interface InventoryItem {
   supplier?: string;
   status: InventoryStatus;
   assigned_expedition_id?: string;
+  cargo_id?: string;
+  reorder_requested?: boolean;
+  barcode?: string;
+  daily_consumption_rate?: number;
+  predicted_depletion_date?: string;
+  lead_time_days?: number;
   created_by: string;
   created_at: string;
   updated_at: string;
