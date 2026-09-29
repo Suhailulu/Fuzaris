@@ -158,8 +158,14 @@ export function Alerts() {
       )}
 
       {selectedEmergency && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
-          <div className="card" style={{ maxWidth: '42rem', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem', backdropFilter: 'blur(4px)' }}>
+          <div className="card" style={{ maxWidth: '48rem', width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '2px solid var(--color-danger)' }}>
+            <div style={{ backgroundColor: 'var(--color-danger)', color: 'white', margin: '-1.5rem -1.5rem 1.5rem -1.5rem', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="font-bold flex items-center gap-2">
+                <AlertTriangle size={20} /> CRITICAL INCIDENT COMMAND
+              </div>
+              <button className="hover:text-gray-200" style={{ fontSize: '1.25rem', lineHeight: 1 }} onClick={() => setSelectedEmergency(null)}>✕</button>
+            </div>
             <div className="flex justify-between items-start mb-6">
               <div>
                 <div className="flex items-center gap-3 mb-1">
@@ -170,21 +176,57 @@ export function Alerts() {
                 </div>
                 <div className="text-muted">{selectedEmergency.event_code} • {selectedEmergency.event_type}</div>
               </div>
-              <button className="text-muted hover:text-gray-800" style={{ fontSize: '1.5rem', lineHeight: 1 }} onClick={() => setSelectedEmergency(null)}>✕</button>
+              <Link to="/emergency/map" className="btn btn-outline btn-sm">
+                View on Operations Map
+              </Link>
             </div>
             
             <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded border border-gray-200">
               <div><div className="text-sm text-muted">Status</div><div className="font-semibold text-red-600">{selectedEmergency.status.replace('_', ' ')}</div></div>
               <div><div className="text-sm text-muted">Reported</div><div className="font-medium">{new Date(selectedEmergency.started_at || selectedEmergency.created_at).toLocaleString()}</div></div>
               <div><div className="text-sm text-muted">Location</div><div className="font-medium">{selectedEmergency.location_id || 'Not Specified'}</div></div>
-              <div><div className="text-sm text-muted">Assigned To</div><div className="font-medium">{selectedEmergency.assigned_to || 'Unassigned Command'}</div></div>
+              <div><div className="text-sm text-muted">Incident Commander</div><div className="font-medium">{selectedEmergency.assigned_to || 'Unassigned Command'}</div></div>
             </div>
             
             <h3 className="font-semibold mb-2">Emergency Details</h3>
             <p className="text-sm mb-6 pb-6 border-b border-gray-200">{selectedEmergency.description}</p>
             
-            <div className="flex justify-end gap-2">
-              <button className="btn btn-outline" onClick={() => setSelectedEmergency(null)}>Close</button>
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <div>
+                <h3 className="font-semibold mb-3 text-red-600 flex items-center gap-2"><ShieldAlert size={16} /> Immediate Protocols</h3>
+                <div className="space-y-2 text-sm">
+                  <label className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-100 cursor-pointer">
+                    <input type="checkbox" className="rounded text-red-600" /> Secure incident perimeter
+                  </label>
+                  <label className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-100 cursor-pointer">
+                    <input type="checkbox" className="rounded text-red-600" /> Dispatch first responders
+                  </label>
+                  <label className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-100 cursor-pointer">
+                    <input type="checkbox" className="rounded text-red-600" /> Notify regional headquarters
+                  </label>
+                  <label className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-100 cursor-pointer">
+                    <input type="checkbox" className="rounded text-red-600" /> Lock down affected assets
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold mb-3 text-blue-600 flex items-center gap-2"><Activity size={16} /> Resource Dispatch</h3>
+                <div className="card p-3 border-blue-200 bg-blue-50">
+                  <div className="text-sm font-semibold mb-1">Recommended Action</div>
+                  <div className="text-xs mb-3 text-muted">Based on proximity and incident type:</div>
+                  <div className="text-sm mb-3">
+                    <strong>MEDEVAC Helicopter (Asset: HELI-09)</strong> is 45km away. ETA: 12 minutes.
+                  </div>
+                  <button className="btn btn-primary btn-sm w-full" onClick={() => alert('Dispatch command sent to HELI-09')}>
+                    Dispatch Immediate Rescue
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+              <button className="btn btn-outline" onClick={() => setSelectedEmergency(null)}>Cancel Action</button>
               <button 
                 className="btn btn-primary" 
                 style={{ backgroundColor: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
@@ -196,7 +238,7 @@ export function Alerts() {
                   }
                 }}
               >
-                Mark as Resolved
+                Mark Incident as Resolved
               </button>
             </div>
           </div>

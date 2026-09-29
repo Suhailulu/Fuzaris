@@ -118,7 +118,7 @@ export interface InventoryItem {
   updated_at: string;
 }
 
-export type TransactionType = 'STOCK_IN' | 'STOCK_OUT' | 'TRANSFER' | 'ADJUSTMENT' | 'CONSUMPTION' | 'RESERVATION';
+export type TransactionType = 'STOCK_IN' | 'STOCK_OUT' | 'TRANSFER' | 'ADJUSTMENT' | 'CONSUMPTION' | 'RESERVATION' | 'RECEIPT_GRN' | 'AUDIT';
 
 export interface InventoryTransaction {
   id: string;

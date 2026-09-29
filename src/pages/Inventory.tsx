@@ -3,7 +3,7 @@ import { useAuth } from '../lib/AuthContext';
 import { api } from '../lib/api';
 import type { InventoryItem } from '../lib/types';
 import { Link } from 'react-router-dom';
-import { Archive, Plus, Search, ScanBarcode, RotateCcw } from 'lucide-react';
+import { Archive, Plus, Search, ScanBarcode, RotateCcw, TrendingDown, ClipboardCheck, FileText } from 'lucide-react';
 
 export function Inventory() {
   const { organization, user } = useAuth();
@@ -92,7 +92,10 @@ export function Inventory() {
         </div>
         {user?.role !== 'VIEWER' && (
           <div className="flex gap-2">
-            <button className="btn btn-outline" onClick={() => alert('Barcode scanner activated (simulated)')}>
+            <button className="btn btn-outline bg-white" onClick={() => alert('Cycle Count / Audit initialized')}>
+              <ClipboardCheck size={18} className="mr-2" /> Audit Stock
+            </button>
+            <button className="btn btn-outline bg-white" onClick={() => alert('Barcode scanner activated (simulated)')}>
               <ScanBarcode size={18} className="mr-2" /> Scan Item
             </button>
             <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
@@ -127,6 +130,33 @@ export function Inventory() {
           <div className="text-sm text-muted font-semibold" style={{ color: 'var(--color-primary)' }}>EXPIRING SOON</div>
           <div className="text-2xl font-bold">{expiringSoon}</div>
         </div>
+      </div>
+
+      <div className="card mb-8">
+        <h2 className="card-title mb-4 flex items-center gap-2 text-warning" style={{ color: 'var(--color-warning)' }}>
+          <TrendingDown size={18} /> High-Risk Depletions (Next 30 Days)
+        </h2>
+        {items.filter(i => i.quantity > 0 && (i.quantity / (i.daily_consumption_rate || Math.max(1, i.quantity/45))) < 30).length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {items
+              .filter(i => i.quantity > 0 && (i.quantity / (i.daily_consumption_rate || Math.max(1, i.quantity/45))) < 30)
+              .sort((a,b) => (a.quantity / (a.daily_consumption_rate || Math.max(1, a.quantity/45))) - (b.quantity / (b.daily_consumption_rate || Math.max(1, b.quantity/45))))
+              .slice(0, 3)
+              .map(i => {
+                const runway = Math.floor(i.quantity / (i.daily_consumption_rate || Math.max(1, i.quantity/45)));
+                return (
+                  <div key={i.id} style={{ padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(245,158,11,0.3)', backgroundColor: 'rgba(245,158,11,0.05)' }}>
+                    <div className="font-semibold">{i.name}</div>
+                    <div className="text-sm mt-1">Est. Runway: <span className="font-bold" style={{ color: 'var(--color-critical)' }}>{runway} days</span></div>
+                    <div className="text-xs text-muted mt-2">Recommended Reorder: {Math.max(0, (i.minimum_threshold*2) - i.quantity)} {i.unit}</div>
+                  </div>
+                );
+              })
+            }
+          </div>
+        ) : (
+          <div className="text-sm text-muted">No immediate stock depletion risks identified.</div>
+        )}
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -185,12 +215,12 @@ export function Inventory() {
                           {i.status.replace(/_/g, ' ')}
                         </span>
                         {(i.status === 'LOW' || i.status === 'CRITICAL' || i.status === 'OUT_OF_STOCK') && !i.reorder_requested && (
-                          <button className="btn btn-outline py-1 px-2 text-xs" style={{ minHeight: 'auto' }} onClick={() => alert(`Auto-restock triggered for ${i.name}`)}>
-                            <RotateCcw size={12} className="mr-1" /> Restock
+                          <button className="btn btn-outline py-1 px-2 text-xs bg-white" style={{ minHeight: 'auto' }} onClick={() => alert(`Purchase Order Draft created for ${i.name}`)}>
+                            <FileText size={12} className="mr-1" /> Draft PO
                           </button>
                         )}
                         {i.reorder_requested && (
-                          <span className="text-xs text-muted font-semibold">Restock pending</span>
+                          <span className="text-xs text-muted font-semibold">PO Issued</span>
                         )}
                       </div>
                     </td>
