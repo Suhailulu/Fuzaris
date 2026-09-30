@@ -10,26 +10,52 @@ import type { User } from './AuthContext';
 export const api = {
   // --- EXPEDITIONS ---
   getExpeditions: async (orgId: string): Promise<Expedition[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.expeditions.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('expeditions').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.expeditions.bulkPut(data);
+    }
     return data || [];
   },
   
   getExpedition: async (orgId: string, id: string): Promise<Expedition | undefined> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.expeditions.get(id);
+    }
     const { data, error } = await supabase.from('expeditions').select('*').eq('organization_id', orgId).eq('id', id).single();
     if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.expeditions.put(data);
+    }
     return data || undefined;
   },
   
   createExpedition: async (orgId: string, user: User, data: Omit<Expedition, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<Expedition> => {
-    const { data: newExp, error } = await supabase.from('expeditions').insert({
+    const payload = {
       ...data,
+      id: crypto.randomUUID(),
       organization_id: orgId,
-      created_by: user.id
-    }).select().single();
-    if (error) throw error;
-    await api.addExpeditionStatusHistory(orgId, user, newExp.id, 'NONE', newExp.status, 'Created expedition');
-    return newExp;
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Expedition;
+
+    const { db } = await import('./offline/db');
+    const { syncQueue } = await import('./offline/syncQueue');
+    await db.expeditions.put(payload);
+    await syncQueue.addOperation('expeditions', payload.id, 'CREATE', payload);
+
+    if (navigator.onLine) {
+      await api.addExpeditionStatusHistory(orgId, user, payload.id, 'NONE', payload.status, 'Created expedition');
+    }
+    return payload;
   },
 
   updateExpedition: async (orgId: string, user: User, id: string, data: Partial<Expedition>): Promise<Expedition> => {
@@ -64,26 +90,52 @@ export const api = {
 
   // --- CARGO ---
   getCargoList: async (orgId: string): Promise<Cargo[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.cargo.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('cargo').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.cargo.bulkPut(data);
+    }
     return data || [];
   },
 
   getCargo: async (orgId: string, id: string): Promise<Cargo | undefined> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.cargo.get(id);
+    }
     const { data, error } = await supabase.from('cargo').select('*').eq('organization_id', orgId).eq('id', id).single();
     if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.cargo.put(data);
+    }
     return data || undefined;
   },
 
   createCargo: async (orgId: string, user: User, data: Omit<Cargo, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<Cargo> => {
-    const { data: newCargo, error } = await supabase.from('cargo').insert({
+    const payload = {
       ...data,
+      id: crypto.randomUUID(),
       organization_id: orgId,
-      created_by: user.id
-    }).select().single();
-    if (error) throw error;
-    await api.addCargoStatusHistory(orgId, user, newCargo.id, 'NONE', newCargo.status, 'Cargo created');
-    return newCargo;
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Cargo;
+
+    const { db } = await import('./offline/db');
+    const { syncQueue } = await import('./offline/syncQueue');
+    await db.cargo.put(payload);
+    await syncQueue.addOperation('cargo', payload.id, 'CREATE', payload);
+
+    if (navigator.onLine) {
+      await api.addCargoStatusHistory(orgId, user, payload.id, 'NONE', payload.status, 'Cargo created');
+    }
+    return payload;
   },
 
   updateCargo: async (orgId: string, user: User, id: string, data: Partial<Cargo>): Promise<Cargo> => {
@@ -133,25 +185,49 @@ export const api = {
 
   // --- INVENTORY ---
   getInventoryItems: async (orgId: string): Promise<InventoryItem[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.inventory.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('inventory_items').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.inventory.bulkPut(data);
+    }
     return data || [];
   },
 
   getInventoryItem: async (orgId: string, id: string): Promise<InventoryItem | undefined> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.inventory.get(id);
+    }
     const { data, error } = await supabase.from('inventory_items').select('*').eq('organization_id', orgId).eq('id', id).single();
     if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.inventory.put(data);
+    }
     return data || undefined;
   },
 
   createInventoryItem: async (orgId: string, user: User, data: Omit<InventoryItem, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<InventoryItem> => {
-    const { data: newItem, error } = await supabase.from('inventory_items').insert({
+    const payload = {
       ...data,
+      id: crypto.randomUUID(),
       organization_id: orgId,
-      created_by: user.id
-    }).select().single();
-    if (error) throw error;
-    return newItem;
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as InventoryItem;
+
+    const { db } = await import('./offline/db');
+    const { syncQueue } = await import('./offline/syncQueue');
+    await db.inventory.put(payload);
+    await syncQueue.addOperation('inventory_items', payload.id, 'CREATE', payload);
+
+    return payload;
   },
 
   updateInventoryQuantity: async (orgId: string, user: User, id: string, change: number, type: string, reason: string, fromLoc: string, toLoc?: string): Promise<void> => {
@@ -193,25 +269,49 @@ export const api = {
 
   // --- ASSETS ---
   getAssets: async (orgId: string): Promise<Asset[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.assets.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('assets').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.assets.bulkPut(data);
+    }
     return data || [];
   },
 
   getAsset: async (orgId: string, id: string): Promise<Asset | undefined> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.assets.get(id);
+    }
     const { data, error } = await supabase.from('assets').select('*').eq('organization_id', orgId).eq('id', id).single();
     if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.assets.put(data);
+    }
     return data || undefined;
   },
 
   createAsset: async (orgId: string, user: User, data: Omit<Asset, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<Asset> => {
-    const { data: newAsset, error } = await supabase.from('assets').insert({
+    const payload = {
       ...data,
+      id: crypto.randomUUID(),
       organization_id: orgId,
-      created_by: user.id
-    }).select().single();
-    if (error) throw error;
-    return newAsset;
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Asset;
+
+    const { db } = await import('./offline/db');
+    const { syncQueue } = await import('./offline/syncQueue');
+    await db.assets.put(payload);
+    await syncQueue.addOperation('assets', payload.id, 'CREATE', payload);
+
+    return payload;
   },
 
   updateAsset: async (orgId: string, id: string, data: Partial<Asset>): Promise<Asset> => {
@@ -238,25 +338,53 @@ export const api = {
 
   // --- PERSONNEL ---
   getPersonnel: async (orgId: string): Promise<Personnel[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.personnel.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('personnel').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.personnel.bulkPut(data);
+    }
     return data || [];
   },
 
   getPersonnelById: async (orgId: string, id: string): Promise<Personnel | undefined> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.personnel.get(id);
+    }
     const { data, error } = await supabase.from('personnel').select('*').eq('organization_id', orgId).eq('id', id).single();
     if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.personnel.put(data);
+    }
     return data || undefined;
   },
 
   createPersonnel: async (orgId: string, user: User, data: Omit<Personnel, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at'>): Promise<Personnel> => {
-    const { data: newPers, error } = await supabase.from('personnel').insert({
+    const payload = {
       ...data,
+      id: crypto.randomUUID(),
       organization_id: orgId,
-      created_by: user.id
-    }).select().single();
-    if (error) throw error;
-    return newPers;
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Personnel;
+
+    const { db } = await import('./offline/db');
+    const { syncQueue } = await import('./offline/syncQueue');
+    
+    // Save locally first
+    await db.personnel.put(payload);
+    
+    // Queue for sync
+    await syncQueue.addOperation('personnel', payload.id, 'CREATE', payload);
+
+    return payload;
   },
 
   updatePersonnel: async (orgId: string, id: string, data: Partial<Personnel>): Promise<Personnel> => {
@@ -304,25 +432,49 @@ export const api = {
 
   // --- ALERTS & RISK ---
   getAlerts: async (orgId: string): Promise<Alert[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.alerts.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('alerts').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.alerts.bulkPut(data);
+    }
     return data || [];
   },
 
   getAlertById: async (orgId: string, id: string): Promise<Alert | undefined> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.alerts.get(id);
+    }
     const { data, error } = await supabase.from('alerts').select('*').eq('organization_id', orgId).eq('id', id).single();
     if (error && error.code !== 'PGRST116') throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.alerts.put(data);
+    }
     return data || undefined;
   },
 
   createAlert: async (orgId: string, user: User, data: Omit<Alert, 'id' | 'organization_id' | 'created_by' | 'created_at' | 'updated_at' | 'acknowledged_at' | 'resolved_at'>): Promise<Alert> => {
-    const { data: newAlert, error } = await supabase.from('alerts').insert({
+    const payload = {
       ...data,
+      id: crypto.randomUUID(),
       organization_id: orgId,
-      created_by: user.id
-    }).select().single();
-    if (error) throw error;
-    return newAlert;
+      created_by: user.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as Alert;
+
+    const { db } = await import('./offline/db');
+    const { syncQueue } = await import('./offline/syncQueue');
+    await db.alerts.put(payload);
+    await syncQueue.addOperation('alerts', payload.id, 'CREATE', payload);
+
+    return payload;
   },
 
   updateAlertStatus: async (orgId: string, user: User, id: string, status: string, notes?: string) => {
@@ -350,8 +502,16 @@ export const api = {
   },
 
   getEmergencyEvents: async (orgId: string): Promise<EmergencyEvent[]> => {
+    if (!navigator.onLine) {
+      const { db } = await import('./offline/db');
+      return await db.emergencies.where('organization_id').equals(orgId).toArray();
+    }
     const { data, error } = await supabase.from('emergency_events').select('*').eq('organization_id', orgId);
     if (error) throw error;
+    if (data) {
+      const { db } = await import('./offline/db');
+      await db.emergencies.bulkPut(data);
+    }
     return data || [];
   },
 

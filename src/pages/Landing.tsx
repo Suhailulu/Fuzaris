@@ -11,15 +11,7 @@ export default function Landing() {
         borderBottom: '1px solid var(--color-border)', position: 'sticky', top: 0, zIndex: 10 
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          <div style={{
-            width: 40, height: 40, background: 'linear-gradient(135deg, var(--color-cobalt), #60A5FA)',
-            borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
-          }}>
-            <Map size={24} />
-          </div>
-          <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--color-navy)' }}>
-            Fuzaris
-          </span>
+          <img src="/logo.png" alt="Fuzaris Logo" style={{ height: '40px', width: 'auto', objectFit: 'contain' }} />
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
           <Link to="/login" className="btn btn-ghost" style={{ textDecoration: 'none' }}>Log in</Link>

@@ -66,15 +66,7 @@ export default function Register() {
 
         <div style={{ position: 'relative', zIndex: 1, padding: 'var(--space-3xl)', display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-            <div style={{
-              width: 48, height: 48, background: 'linear-gradient(135deg, var(--color-cobalt), #60A5FA)',
-              borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
-            }}>
-              <Map size={28} />
-            </div>
-            <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'white' }}>
-              Fuzaris
-            </span>
+            <img src="/logo.png" alt="Fuzaris Logo" style={{ height: '80px', width: 'auto', objectFit: 'contain' }} />
           </div>
 
           <div style={{ margin: 'auto 0' }}>

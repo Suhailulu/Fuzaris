@@ -60,6 +60,33 @@ export function PersonnelList() {
     }
   };
 
+  const handleSeedData = async () => {
+    if (!user || !organization) return;
+    try {
+      const { supabase } = await import('../lib/supabase');
+      // Create some default locations with correct schema
+      await supabase.from('locations').insert([
+        { organization_id: organization.id, location_code: 'LOC-001', name: 'Bharati Station', location_type: 'STATION', status: 'ACTIVE', latitude: -69.4077, longitude: 76.1872 },
+        { organization_id: organization.id, location_code: 'LOC-002', name: 'Maitri Station', location_type: 'STATION', status: 'ACTIVE', latitude: -70.7661, longitude: 11.7322 },
+        { organization_id: organization.id, location_code: 'LOC-003', name: 'NCPOR Headquarters', location_type: 'BASE', status: 'ACTIVE', latitude: 15.4024, longitude: 73.8166 },
+        { organization_id: organization.id, location_code: 'LOC-004', name: 'Cape Town Port', location_type: 'PORT', status: 'ACTIVE', latitude: -33.9188, longitude: 18.4233 }
+      ]);
+      
+      // Create a default expedition if none exists
+      if (expeditions.length === 0) {
+        await api.createExpedition(organization.id, user, {
+          expedition_code: 'EXP-001', name: 'Arctic Frontier Alpha', description: 'Initial setup expedition.', start_date: new Date().toISOString(), end_date: new Date(Date.now() + 86400000*30).toISOString(), status: 'PLANNING', priority: 'HIGH', budget: 1000000
+        });
+      }
+      
+      alert('Default locations and expeditions added! Reloading data...');
+      loadData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add default data.');
+    }
+  };
+
   if (showCreate) {
     return (
       <div className="card" style={{ maxWidth: '800px' }}>
@@ -138,11 +165,18 @@ export function PersonnelList() {
           <h1 className="text-2xl font-bold mb-1">Personnel</h1>
           <p className="text-muted">Monitor expedition personnel, assignments and movements.</p>
         </div>
-        {user?.role !== 'VIEWER' && (
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-            <Plus size={18} className="mr-2" /> Add Personnel
-          </button>
-        )}
+        <div className="flex gap-3">
+          {locations.length === 0 && user?.role !== 'VIEWER' && (
+            <button className="btn btn-outline" onClick={handleSeedData} style={{ borderColor: 'var(--color-emerald)', color: 'var(--color-emerald)' }}>
+              Seed Default Data
+            </button>
+          )}
+          {user?.role !== 'VIEWER' && (
+            <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+              <Plus size={18} className="mr-2" /> Add Personnel
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card" style={{ padding: 0 }}>
