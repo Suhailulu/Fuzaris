@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from './supabase';
+import { useConnectivity } from './offline/connectivity';
 
 export type Role = 'ADMIN' | 'EXPEDITION_MANAGER' | 'STATION_OFFICER' | 'VIEWER';
 
@@ -53,9 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     };
-    
+
     checkSession();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         fetchProfile(session.user.id);
@@ -75,15 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', authId)
         .single();
-        
+
       if (profileError) throw profileError;
-      
+
       const { data: org, error: orgError } = await supabase
         .from('organizations')
         .select('*')
         .eq('id', profile.organization_id)
         .single();
-        
+
       if (orgError) throw orgError;
 
       setUser(profile);
@@ -194,13 +195,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq('id', user.id)
       .select()
       .single();
-      
+
     if (error) throw error;
     setUser(updated);
   };
 
+  const isOnline = useConnectivity();
+
   return (
     <AuthContext.Provider value={{ user, organization, login, register, logout, updateProfile, loading, error }}>
+      {!isOnline && (
+        <div style={{ backgroundColor: '#ef4444', color: 'white', textAlign: 'center', padding: '6px', fontSize: '13px', fontWeight: 'bold' }}>
+          🔴 Offline — Changes will sync automatically when internet returns
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );

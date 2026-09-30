@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../lib/AuthContext';
-import { api } from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { Activity, Package, Users, AlertTriangle, ArrowRightLeft } from 'lucide-react';
 
 
@@ -21,56 +21,61 @@ export function ActivityFeed() {
     if (organization) {
       const unified: UnifiedEvent[] = [];
 
-      for (const exp of await api.getExpeditions(organization.id)) {
-        for (const h of await api.getExpeditionHistory(organization.id, exp.id)) {
-          unified.push({
-            id: h.id,
-            timestamp: h.changed_at,
-            entity: `Expedition ${exp.expedition_code}`,
-            description: h.previous_status === 'NONE' ? `Created as ${h.new_status}` : `Changed from ${h.previous_status} to ${h.new_status}`,
-            user: h.changed_by,
-            type: 'EXPEDITION'
-          });
-        }
-      }
+      const limit = 30;
 
-      for (const c of await api.getCargoList(organization.id)) {
-        for (const h of await api.getCargoStatusHistory(organization.id, c.id)) {
-          unified.push({
-            id: h.id,
-            timestamp: h.changed_at,
-            entity: `Cargo ${c.cargo_code}`,
-            description: h.previous_status === 'NONE' ? `Created as ${h.new_status}` : `Changed from ${h.previous_status} to ${h.new_status}`,
-            user: h.changed_by,
-            type: 'CARGO'
-          });
-        }
-      }
+      try {
+        const [expRes, cargoRes, invRes, alertRes] = await Promise.all([
+          supabase.from('expedition_status_history').select('*, expeditions(expedition_code)').eq('organization_id', organization.id).order('changed_at', { ascending: false }).limit(limit),
+          supabase.from('cargo_status_history').select('*, cargo(cargo_code)').eq('organization_id', organization.id).order('changed_at', { ascending: false }).limit(limit),
+          supabase.from('inventory_transactions').select('*, inventory_items(item_code, unit)').eq('organization_id', organization.id).order('created_at', { ascending: false }).limit(limit),
+          supabase.from('alert_history').select('*, alerts(alert_code)').eq('organization_id', organization.id).order('created_at', { ascending: false }).limit(limit)
+        ]);
 
-      for (const item of await api.getInventoryItems(organization.id)) {
-        for (const t of await api.getInventoryTransactions(organization.id, item.id)) {
-          unified.push({
-            id: t.id,
-            timestamp: t.created_at,
-            entity: `Inventory ${item.item_code}`,
-            description: `${t.transaction_type.replace('_', ' ')}: ${t.quantity} ${item.unit} (${t.previous_quantity} → ${t.new_quantity})`,
-            user: t.performed_by,
-            type: 'INVENTORY'
-          });
+        if (expRes.data) {
+          for (const h of expRes.data) {
+            unified.push({
+              id: h.id, timestamp: h.changed_at,
+              entity: `Expedition ${h.expeditions?.expedition_code || 'Unknown'}`,
+              description: h.previous_status === 'NONE' ? `Created as ${h.new_status}` : `Changed from ${h.previous_status} to ${h.new_status}`,
+              user: h.changed_by, type: 'EXPEDITION'
+            });
+          }
         }
-      }
 
-      for (const a of await api.getAlerts(organization.id)) {
-        for (const h of await api.getAlertHistory(organization.id, a.id)) {
-          unified.push({
-            id: h.id,
-            timestamp: h.created_at,
-            entity: `Alert ${a.alert_code}`,
-            description: h.previous_status ? `Changed from ${h.previous_status} to ${h.new_status}` : `Generated with status ${h.new_status}`,
-            user: h.changed_by,
-            type: 'ALERT'
-          });
+        if (cargoRes.data) {
+          for (const h of cargoRes.data) {
+            unified.push({
+              id: h.id, timestamp: h.changed_at,
+              entity: `Cargo ${h.cargo?.cargo_code || 'Unknown'}`,
+              description: h.previous_status === 'NONE' ? `Created as ${h.new_status}` : `Changed from ${h.previous_status} to ${h.new_status}`,
+              user: h.changed_by, type: 'CARGO'
+            });
+          }
         }
+
+        if (invRes.data) {
+          for (const t of invRes.data) {
+            unified.push({
+              id: t.id, timestamp: t.created_at,
+              entity: `Inventory ${t.inventory_items?.item_code || 'Unknown'}`,
+              description: `${t.transaction_type.replace('_', ' ')}: ${t.quantity} ${t.inventory_items?.unit || ''} (${t.previous_quantity} → ${t.new_quantity})`,
+              user: t.performed_by, type: 'INVENTORY'
+            });
+          }
+        }
+
+        if (alertRes.data) {
+          for (const h of alertRes.data) {
+            unified.push({
+              id: h.id, timestamp: h.created_at || h.changed_at || new Date().toISOString(),
+              entity: `Alert ${h.alerts?.alert_code || 'Unknown'}`,
+              description: h.previous_status ? `Changed from ${h.previous_status} to ${h.new_status}` : `Generated with status ${h.new_status}`,
+              user: h.changed_by, type: 'ALERT'
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching activity feed:', err);
       }
 
       unified.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -99,26 +104,31 @@ export function ActivityFeed() {
       <div className="card">
         <h2 className="text-lg font-bold mb-4">Recent Operations</h2>
         
-        <div className="space-y-6">
+        <div className="space-y-0">
           {events.length === 0 ? (
-            <div className="text-center py-8 text-muted">
+            <div className="text-center py-8 text-gray-500">
               No recent activity found.
             </div>
           ) : (
             events.map(event => (
-              <div key={event.id} className="flex gap-4">
-                <div className="mt-1 bg-surface-hover p-2 rounded-full h-fit">
+              <div key={event.id} className="flex gap-4 items-start py-4 border-b border-gray-100 last:border-0">
+                <div className="p-2 bg-gray-50 rounded-lg shrink-0">
                   {getIcon(event.type)}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">{event.entity}</span>
-                    <span className="text-xs text-muted">
-                      {new Date(event.timestamp).toLocaleString()}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h4 className="font-semibold text-gray-900 truncate">{event.entity}</h4>
+                    <span className="text-xs text-gray-500 whitespace-nowrap bg-gray-50 px-2 py-1 rounded-md">
+                      {new Date(event.timestamp).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
                     </span>
                   </div>
-                  <p className="text-sm text-muted">{event.description}</p>
-                  <p className="text-xs text-muted mt-1">User ID: {event.user}</p>
+                  <p className="text-sm text-gray-700 mb-2">{event.description}</p>
+                  <div className="flex items-center text-xs text-gray-400 font-mono">
+                    <Users size={12} className="mr-1" />
+                    <span className="truncate">{event.user}</span>
+                  </div>
                 </div>
               </div>
             ))

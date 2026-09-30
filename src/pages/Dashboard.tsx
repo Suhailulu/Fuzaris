@@ -38,12 +38,12 @@ export function Dashboard() {
 
   useEffect(() => { const loadAsync = async () => {
     if (organization && user) {
-      // 0. Trigger Rule-Based Risk Engine
-      try {
-        await api.evaluateRisks(organization.id, user);
-      } catch (err) {
-        console.error('Risk evaluation engine failed:', err);
-      }
+      // 0. Trigger Rule-Based Risk Engine (Disabled temporarily to prevent Network tab flooding)
+      // try {
+      //   await api.evaluateRisks(organization.id, user);
+      // } catch (err) {
+      //   console.error('Risk evaluation engine failed:', err);
+      // }
 
       // 1. Expeditions
       const exps = await api.getExpeditions(organization.id);
@@ -115,11 +115,26 @@ export function Dashboard() {
   const isExpeditionManager = ['Expedition Manager', 'Personnel Officer', 'Emergency Response Officer', 'ADMIN'].includes(user?.role || '');
   const isStationOfficer = ['Logistics Officer', 'Inventory & Asset Officer', 'ADMIN'].includes(user?.role || '');
 
+  const roleDisplay = user?.role === 'ADMIN' ? 'Command Centre Admin' : user?.role || 'Staff Member';
+  const isCommandCenter = user?.role === 'ADMIN';
+
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1">Mission Control</h1>
-        <p className="text-muted">Unified operational overview of your polar expedition activities for {organization?.name}.</p>
+      <div className="mb-8 border-b border-gray-100 pb-4">
+        <div className="flex items-center gap-3 mb-1">
+          <h1 className="text-2xl font-bold">
+            {isCommandCenter ? 'Mission Control' : `${roleDisplay} Dashboard`}
+          </h1>
+          <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">
+            {roleDisplay}
+          </span>
+        </div>
+        <p className="text-muted">
+          {isCommandCenter 
+            ? `Unified command overview of all polar expedition activities for ${organization?.name}.`
+            : `Operational metrics and alerts tailored for your ${roleDisplay} responsibilities.`
+          }
+        </p>
       </div>
 
       {activeEmergenciesList.length > 0 && isExpeditionManager && (

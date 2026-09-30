@@ -47,8 +47,13 @@ export function Inventory() {
     if (formData.critical_threshold < 0) return setError('Critical threshold cannot be negative');
     if (formData.critical_threshold > formData.minimum_threshold) return setError('Critical threshold cannot exceed min threshold');
     
+    const finalData = { ...formData };
+    if (!finalData.item_code) {
+      finalData.item_code = `INV-${Math.floor(Math.random() * 90000 + 10000)}`;
+    }
+
     try {
-      await api.createInventoryItem(organization.id, user, formData as any);
+      await api.createInventoryItem(organization.id, user, finalData as any);
       setShowCreate(false);
       loadData();
     } catch (err: any) {
@@ -63,7 +68,6 @@ export function Inventory() {
         {error && <div className="mb-4 text-sm" style={{ padding: '0.75rem', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--color-critical)' }}>{error}</div>}
         <form onSubmit={handleCreate}>
           <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="form-group"><label className="form-label">Item Code</label><input required className="form-input" value={formData.item_code} onChange={e => setFormData({...formData, item_code: e.target.value.trim()})} /></div>
             <div className="form-group"><label className="form-label">Name</label><input required className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
             <div className="form-group"><label className="form-label">Category</label><select className="form-input" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as any})}><option value="FOOD">Food</option><option value="FUEL">Fuel</option><option value="MEDICAL">Medical</option><option value="GENERAL">General</option></select></div>
             <div className="form-group"><label className="form-label">Initial Quantity</label><input required type="number" min="0" className="form-input" value={formData.quantity} onChange={e => setFormData({...formData, quantity: parseInt(e.target.value) || 0})} /></div>

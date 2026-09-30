@@ -8,7 +8,7 @@ import { RouteMap } from '../shared/components/RouteMap';
 
 export function ExpeditionDetail() {
   const { id } = useParams<{ id: string }>();
-  const { organization } = useAuth();
+  const { organization, user } = useAuth();
   
   const [expedition, setExpedition] = useState<Expedition | null>(null);
   const [cargoList, setCargoList] = useState<Cargo[]>([]);
@@ -56,88 +56,145 @@ export function ExpeditionDetail() {
     }
   };
 
+  const handleSeedTestData = async () => {
+    if (!organization || !user) return;
+    try {
+      await api.createCargo(organization.id, user, { expedition_id: expedition.id, cargo_code: 'CG-801', name: 'Ice Core Drill System', category: 'SCIENTIFIC', quantity: 1, unit: 'system', weight: 450.5, volume: 3.2, priority: 'HIGH', origin: 'NCPOR HQ', destination: 'Bharati Station', current_location: 'Cape Town Port', expected_arrival: '2026-10-05', status: 'IN_TRANSIT' });
+      await api.createCargo(organization.id, user, { expedition_id: expedition.id, cargo_code: 'CG-802', name: 'Medical Supplies Batch A', category: 'MEDICAL', quantity: 5, unit: 'boxes', weight: 120, volume: 1.5, priority: 'CRITICAL', origin: 'NCPOR HQ', destination: 'Bharati Station', current_location: 'Bharati Station', expected_arrival: '2026-09-20', status: 'ARRIVED' });
+      
+      const { supabase } = await import('../lib/supabase');
+      // Create some Inventory (bypassing api methods if they don't exist, using supabase client directly)
+      await supabase.from('inventory').insert({ organization_id: organization.id, expedition_id: expedition.id, created_by: user.id, item_code: 'INV-801', name: 'Extreme Weather Parkas', category: 'GEAR', quantity: 15, unit: 'suits', unit_cost: 500, location: 'Base Camp', min_threshold: 5, status: 'AVAILABLE' });
+      
+      // Assets
+      await supabase.from('assets').insert({ organization_id: organization.id, assigned_expedition_id: expedition.id, created_by: user.id, asset_code: 'AST-801', name: 'Snowcat Vehicle Alpha', category: 'VEHICLE', status: 'ACTIVE', condition: 'GOOD', location: 'Garage 1', purchase_date: '2025-01-15' });
+      
+      // Personnel
+      await supabase.from('personnel').insert({ organization_id: organization.id, assigned_expedition_id: expedition.id, created_by: user.id, personnel_code: 'PER-801', first_name: 'Dr. Rajesh', last_name: 'Kumar', role: 'Chief Scientist', email: 'rkumar@polar.org', phone: '+91987654321', status: 'DEPLOYED', location: 'Bharati Station', clearance_level: 'SECRET' });
+      
+      // Alerts
+      await supabase.from('alerts').insert({ organization_id: organization.id, expedition_id: expedition.id, created_by: user.id, title: 'Blizzard Warning', description: 'Severe whiteout conditions expected over the next 48 hours.', severity: 'CRITICAL', category: 'WEATHER', status: 'OPEN', location: 'Bharati Station' });
+
+      alert('Test data generated successfully! Please refresh the page.');
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate test data.');
+    }
+  };
+
   return (
     <div>
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl font-bold">{expedition.expedition_code}</h1>
-            <span className="badge" style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
-              {expedition.status}
-            </span>
-            <span className="badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-warning)', padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
-              {expedition.priority}
-            </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', backgroundColor: 'var(--color-surface)', padding: '1.5rem', borderRadius: '1rem', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <h1 style={{ fontSize: '1.875rem', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>{expedition.expedition_code}</h1>
+              <span className="badge" style={{ backgroundColor: 'var(--color-surface-alt)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                {expedition.status}
+              </span>
+              <span className="badge" style={{ backgroundColor: 'var(--color-warning-bg)', border: '1px solid rgba(245, 158, 11, 0.2)', color: 'var(--color-warning-text)', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                {expedition.priority}
+              </span>
+            </div>
+            <p style={{ fontSize: '1.125rem', color: 'var(--color-text-secondary)', fontWeight: 500, margin: 0 }}>{expedition.name}</p>
           </div>
-          <p className="text-lg text-muted">{expedition.name}</p>
+          
+          {user?.role === 'Expedition Manager' || user?.role === 'ADMIN' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Update Phase:</span>
+              <select 
+                className="form-input" 
+                value={expedition.status}
+                onChange={e => handleStatusChange(e.target.value)}
+                disabled={isUpdatingStatus}
+                style={{ minWidth: '160px', padding: '0.375rem 0.75rem', height: 'auto', fontSize: '0.875rem' }}
+              >
+                <option value="PLANNING">Planning</option>
+                <option value="PREPARATION">Preparation</option>
+                <option value="DEPLOYED">Deployed</option>
+                <option value="ON_STATION">On Station</option>
+                <option value="DEMOBILIZING">Demobilizing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+              <button 
+                onClick={handleSeedTestData}
+                className="btn btn-outline" 
+                style={{ padding: '0.375rem 0.75rem', fontSize: '0.875rem', borderColor: 'var(--color-cobalt)', color: 'var(--color-cobalt)' }}
+              >
+                Seed Demo Data
+              </button>
+            </div>
+          ) : (
+            <button className="btn btn-outline">Edit Expedition</button>
+          )}
         </div>
-        
-        {user?.role === 'Expedition Manager' || user?.role === 'ADMIN' ? (
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-muted">Update Phase:</span>
-            <select 
-              className="form-input py-1.5 h-auto text-sm" 
-              value={expedition.status}
-              onChange={e => handleStatusChange(e.target.value)}
-              disabled={isUpdatingStatus}
-              style={{ minWidth: '160px' }}
-            >
-              <option value="PLANNING">Planning</option>
-              <option value="PREPARATION">Preparation</option>
-              <option value="DEPLOYED">Deployed</option>
-              <option value="ON_STATION">On Station</option>
-              <option value="DEMOBILIZING">Demobilizing</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </div>
-        ) : (
-          <button className="btn btn-outline">Edit Expedition</button>
-        )}
       </div>
 
-      <div className="flex gap-4 mb-6" style={{ borderBottom: '1px solid var(--color-border)', overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', overflowX: 'auto', backgroundColor: 'var(--color-surface-alt)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--color-border)', width: 'fit-content', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}>
         {['Overview', 'Route Map', 'Cargo', 'Inventory', 'Assets', 'Personnel', 'Timeline', 'Alerts & Risk'].map(tab => (
           <button 
             key={tab}
-            className="pb-2 font-semibold whitespace-nowrap"
-            style={{ 
-              color: activeTab === tab ? 'var(--color-primary)' : 'var(--color-text-muted)',
-              borderBottom: activeTab === tab ? '2px solid var(--color-primary)' : '2px solid transparent',
-              marginBottom: '-1px'
-            }}
             onClick={() => setActiveTab(tab)}
+            style={{ 
+              border: 'none',
+              padding: '8px 20px',
+              borderRadius: '6px',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              whiteSpace: 'nowrap',
+              outline: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              backgroundColor: activeTab === tab ? 'var(--color-surface)' : 'transparent',
+              color: activeTab === tab ? 'var(--color-cobalt)' : 'var(--color-text-secondary)',
+              boxShadow: activeTab === tab ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+            }}
           >
             {tab}
             {tab === 'Alerts & Risk' && openAlerts.length > 0 && (
-              <span className="ml-2 bg-red-100 text-red-600 rounded-full px-2 py-0.5 text-xs">{openAlerts.length}</span>
+              <span style={{ marginLeft: '8px', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger-text)', borderRadius: '9999px', padding: '2px 8px', fontSize: '0.75rem' }}>
+                {openAlerts.length}
+              </span>
             )}
           </button>
         ))}
       </div>
 
       {activeTab === 'Overview' && (
-        <div className="grid gap-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="kpi-grid">
-            <div className="card text-center">
-              <Package className="mx-auto mb-2 text-secondary" size={24} />
-              <div className="text-sm text-muted font-semibold">Cargo Items</div>
-              <div className="text-2xl font-bold">{cargoList.length}</div>
+            <div className="card" style={{ textAlign: 'center', transition: 'transform 0.2s', borderTop: '4px solid var(--color-sidebar-hover)' }}>
+              <div style={{ width: '48px', height: '48px', margin: '0 auto 16px', borderRadius: '12px', backgroundColor: 'rgba(100, 116, 139, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Package style={{ color: 'var(--color-text-secondary)' }} size={24} />
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cargo Items</div>
+              <div style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--color-text-primary)' }}>{cargoList.length}</div>
             </div>
-            <div className="card text-center">
-              <Box className="mx-auto mb-2 text-primary" size={24} />
-              <div className="text-sm text-muted font-semibold">Inventory Associated</div>
-              <div className="text-2xl font-bold">{inventory.length}</div>
+            
+            <div className="card" style={{ textAlign: 'center', transition: 'transform 0.2s', borderTop: '4px solid var(--color-cobalt)' }}>
+              <div style={{ width: '48px', height: '48px', margin: '0 auto 16px', borderRadius: '12px', backgroundColor: 'var(--color-cobalt-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box style={{ color: 'var(--color-cobalt)' }} size={24} />
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Inventory Linked</div>
+              <div style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--color-text-primary)' }}>{inventory.length}</div>
             </div>
-            <div className="card text-center">
-              <Settings2 className="mx-auto mb-2 text-accent" size={24} />
-              <div className="text-sm text-muted font-semibold">Assigned Assets</div>
-              <div className="text-2xl font-bold">{assets.length}</div>
+            
+            <div className="card" style={{ textAlign: 'center', transition: 'transform 0.2s', borderTop: '4px solid var(--color-warning)' }}>
+              <div style={{ width: '48px', height: '48px', margin: '0 auto 16px', borderRadius: '12px', backgroundColor: 'var(--color-warning-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Settings2 style={{ color: 'var(--color-warning)' }} size={24} />
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assigned Assets</div>
+              <div style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--color-text-primary)' }}>{assets.length}</div>
             </div>
-            <div className="card text-center">
-              <Users className="mx-auto mb-2 text-primary" size={24} />
-              <div className="text-sm text-muted font-semibold">Assigned Personnel</div>
-              <div className="text-2xl font-bold">{personnel.length}</div>
+            
+            <div className="card" style={{ textAlign: 'center', transition: 'transform 0.2s', borderTop: '4px solid var(--color-success)' }}>
+              <div style={{ width: '48px', height: '48px', margin: '0 auto 16px', borderRadius: '12px', backgroundColor: 'var(--color-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Users style={{ color: 'var(--color-success)' }} size={24} />
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', fontWeight: 700, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Team Personnel</div>
+              <div style={{ fontSize: '2.25rem', fontWeight: 900, color: 'var(--color-text-primary)' }}>{personnel.length}</div>
             </div>
             <div className="card text-center">
               <AlertTriangle className="mx-auto mb-2 text-red-500" size={24} />

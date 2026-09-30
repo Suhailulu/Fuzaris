@@ -400,8 +400,6 @@ export const api = {
         severity: 'MEDIUM',
         source_entity_type: 'cargo',
         source_entity_id: cargo.id,
-        location_id: cargo.current_location,
-        expedition_id: cargo.expedition_id,
         risk_score: 55,
       });
     }
@@ -418,7 +416,6 @@ export const api = {
         severity: item.status === 'OUT_OF_STOCK' ? 'CRITICAL' : 'HIGH',
         source_entity_type: 'inventory',
         source_entity_id: item.id,
-        location_id: item.station,
         risk_score: item.status === 'OUT_OF_STOCK' ? 90 : 75,
       });
     }
@@ -435,7 +432,6 @@ export const api = {
         severity: asset.status === 'DAMAGED' ? 'HIGH' : 'MEDIUM',
         source_entity_type: 'asset',
         source_entity_id: asset.id,
-        location_id: asset.location,
         risk_score: asset.status === 'DAMAGED' ? 80 : 40,
       });
     }
@@ -452,7 +448,6 @@ export const api = {
           severity: 'CRITICAL',
           source_entity_type: 'expedition',
           source_entity_id: exp.id,
-          location_id: exp.destination,
           expedition_id: exp.id,
           risk_score: 95,
         });
