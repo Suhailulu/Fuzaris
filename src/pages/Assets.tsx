@@ -43,9 +43,13 @@ export function Assets() {
     e.preventDefault();
     setError('');
     if (!user || !organization) return;
+    const finalData = { ...formData };
+    if (!finalData.asset_code) {
+      finalData.asset_code = `AST-${Math.floor(Math.random() * 90000 + 10000)}`;
+    }
     
     try {
-      await api.createAsset(organization.id, user, formData as any);
+      await api.createAsset(organization.id, user, finalData as any);
       setShowCreate(false);
       loadData();
     } catch (err: any) {
@@ -60,7 +64,6 @@ export function Assets() {
         {error && <div className="mb-4 text-sm" style={{ padding: '0.75rem', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--color-critical)' }}>{error}</div>}
         <form onSubmit={handleCreate}>
           <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="form-group"><label className="form-label">Asset Code</label><input required className="form-input" value={formData.asset_code} onChange={e => setFormData({...formData, asset_code: e.target.value.trim()})} /></div>
             <div className="form-group"><label className="form-label">Name</label><input required className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
             
             <div className="form-group"><label className="form-label">Type</label><select className="form-input" value={formData.asset_type} onChange={e => setFormData({...formData, asset_type: e.target.value as any})}><option value="VEHICLE">Vehicle</option><option value="SNOW_VEHICLE">Snow Vehicle</option><option value="GENERATOR">Generator</option><option value="COMMUNICATION_EQUIPMENT">Comm. Equipment</option><option value="OTHER">Other</option></select></div>

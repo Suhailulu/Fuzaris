@@ -1,4 +1,4 @@
-import { db, SyncOperation } from './db';
+import { db, type SyncOperation } from './db';
 
 export const syncQueue = {
   addOperation: async (

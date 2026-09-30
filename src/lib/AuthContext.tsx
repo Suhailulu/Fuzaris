@@ -54,9 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     };
-    
+
     checkSession();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         fetchProfile(session.user.id);
@@ -76,15 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', authId)
         .single();
-        
+
       if (profileError) throw profileError;
-      
+
       const { data: org, error: orgError } = await supabase
         .from('organizations')
         .select('*')
         .eq('id', profile.organization_id)
         .single();
-        
+
       if (orgError) throw orgError;
 
       setUser(profile);
@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq('id', user.id)
       .select()
       .single();
-      
+
     if (error) throw error;
     setUser(updated);
   };

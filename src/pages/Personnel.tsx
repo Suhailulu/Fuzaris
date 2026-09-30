@@ -46,9 +46,13 @@ export function PersonnelList() {
     e.preventDefault();
     setError('');
     if (!user || !organization) return;
+    const finalData = { ...formData };
+    if (!finalData.personnel_code) {
+      finalData.personnel_code = `PER-${Math.floor(Math.random() * 90000 + 10000)}`;
+    }
     
     try {
-      await api.createPersonnel(organization.id, user, formData as any);
+      await api.createPersonnel(organization.id, user, finalData as any);
       setShowCreate(false);
       loadData();
     } catch (err: any) {
@@ -66,7 +70,6 @@ export function PersonnelList() {
             <div className="border-b pb-4">
               <h3 className="font-semibold mb-4 text-primary">Identity</h3>
               <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                <div className="form-group"><label className="form-label">Personnel Code</label><input required className="form-input" value={formData.personnel_code} onChange={e => setFormData({...formData, personnel_code: e.target.value.trim()})} /></div>
                 <div className="form-group"><label className="form-label">Full Name</label><input required className="form-input" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} /></div>
                 <div className="form-group"><label className="form-label">Role</label><input required className="form-input" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} /></div>
                 <div className="form-group"><label className="form-label">Department</label><input required className="form-input" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} /></div>

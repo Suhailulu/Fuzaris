@@ -13,6 +13,9 @@ export function CargoDetail() {
   const [expedition, setExpedition] = useState<Expedition | null>(null);
   const [movements, setMovements] = useState<CargoMovement[]>([]);
   const [history, setHistory] = useState<CargoStatusHistory[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Cargo>>({});
+  const { user } = useAuth();
   
   useEffect(() => { const loadAsync = async () => {
     if (organization && id) {
@@ -30,6 +33,28 @@ export function CargoDetail() {
 
   if (!cargo) return <div className="p-8">Loading...</div>;
 
+  const handleEditClick = () => {
+    setEditForm({
+      status: cargo.status,
+      current_location: cargo.current_location,
+      expected_arrival: cargo.expected_arrival
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!organization || !user) return;
+    try {
+      const updated = await api.updateCargo(organization.id, user, cargo.id, editForm);
+      setCargo(updated);
+      setHistory(await api.getCargoStatusHistory(organization.id, cargo.id));
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update cargo');
+    }
+  };
+
   return (
     <div>
       <div className="flex items-start justify-between mb-8">
@@ -45,8 +70,42 @@ export function CargoDetail() {
           </div>
           <p className="text-lg text-muted">{cargo.name}</p>
         </div>
-        <button className="btn btn-outline">Edit Cargo</button>
+        {user?.role !== 'VIEWER' && (
+          <button className="btn btn-outline" onClick={handleEditClick} disabled={isEditing}>Edit Cargo</button>
+        )}
       </div>
+
+      {isEditing && (
+        <div className="card mb-6 bg-surface-hover">
+          <h3 className="font-bold mb-4">Quick Update</h3>
+          <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <select className="form-input" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value as any})}>
+                <option value="PLANNED">Planned</option>
+                <option value="PACKED">Packed</option>
+                <option value="LOADED">Loaded</option>
+                <option value="IN_TRANSIT">In Transit</option>
+                <option value="ARRIVED">Arrived</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="DELAYED">Delayed</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Current Location</label>
+              <input className="form-input" value={editForm.current_location || ''} onChange={e => setEditForm({...editForm, current_location: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">ETA</label>
+              <input type="date" className="form-input" value={editForm.expected_arrival ? editForm.expected_arrival.substring(0, 10) : ''} onChange={e => setEditForm({...editForm, expected_arrival: e.target.value})} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-4">
+            <button className="btn btn-outline btn-sm" onClick={() => setIsEditing(false)}>Cancel</button>
+            <button className="btn btn-primary btn-sm" onClick={handleSave}>Save Changes</button>
+          </div>
+        </div>
+      )}
 
       <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
         <div className="space-y-6 flex flex-col gap-6">

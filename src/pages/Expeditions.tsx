@@ -37,8 +37,14 @@ export function Expeditions() {
       setError('Expected arrival cannot be before start date.');
       return;
     }
+    
+    const finalData = { ...formData };
+    if (!finalData.expedition_code) {
+      finalData.expedition_code = `EXP-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+    }
+
     try {
-      await api.createExpedition(organization.id, user, formData as any);
+      await api.createExpedition(organization.id, user, finalData as any);
       setShowCreate(false);
       setExpeditions(await api.getExpeditions(organization.id));
     } catch (err: any) {
@@ -53,7 +59,6 @@ export function Expeditions() {
         {error && <div className="mb-4 text-sm" style={{ padding: '0.75rem', backgroundColor: 'rgba(239,68,68,0.1)', color: 'var(--color-critical)' }}>{error}</div>}
         <form onSubmit={handleCreate}>
           <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="form-group"><label className="form-label">Code</label><input required className="form-input" value={formData.expedition_code} onChange={e => setFormData({...formData, expedition_code: e.target.value.trim()})} placeholder="ANT-2026-001" /></div>
             <div className="form-group"><label className="form-label">Name</label><input required className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Supply Expedition" /></div>
             <div className="form-group"><label className="form-label">Origin</label><input required className="form-input" value={formData.origin} onChange={e => setFormData({...formData, origin: e.target.value})} /></div>
             <div className="form-group"><label className="form-label">Destination</label><input required className="form-input" value={formData.destination} onChange={e => setFormData({...formData, destination: e.target.value})} /></div>

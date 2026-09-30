@@ -12,20 +12,29 @@ import {
   Settings
 } from 'lucide-react';
 import clsx from 'clsx';
+import { useAuth } from '../lib/AuthContext';
 
 export function Sidebar({ collapsed }: { collapsed: boolean }) {
-  const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard', active: true },
-    { to: '/expeditions', icon: Map, label: 'Expeditions', active: true },
-    { to: '/cargo', icon: Package, label: 'Cargo', active: true },
-    { to: '/inventory', icon: Archive, label: 'Inventory', active: true },
-    { to: '/assets', icon: Settings2, label: 'Assets', active: true },
-    { to: '/personnel', icon: Users, label: 'Personnel', active: true },
-    { to: '/operations-map', icon: Map, label: 'Operations Map', active: true },
-    { to: '/alerts', icon: AlertTriangle, label: 'Alerts & Emergency', active: true },
-    { to: '/reports', icon: BarChart2, label: 'Reports', active: true },
-    { to: '/activity', icon: History, label: 'Activity Feed', active: true },
+  const { user } = useAuth();
+  const role = user?.role || '';
+  const isAdmin = role === 'ADMIN';
+  const isExpeditionManager = ['Expedition Manager', 'ADMIN'].includes(role);
+  const isStationOfficer = ['Logistics Officer', 'Inventory & Asset Officer', 'ADMIN'].includes(role);
+  const isPersonnelOfficer = ['Personnel Officer', 'ADMIN'].includes(role);
+  const allNavItems = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard', show: true },
+    { to: '/expeditions', icon: Map, label: 'Expeditions', show: isExpeditionManager },
+    { to: '/cargo', icon: Package, label: 'Cargo', show: isExpeditionManager },
+    { to: '/inventory', icon: Archive, label: 'Inventory', show: isStationOfficer },
+    { to: '/assets', icon: Settings2, label: 'Assets', show: isStationOfficer },
+    { to: '/personnel', icon: Users, label: 'Personnel', show: isPersonnelOfficer || isExpeditionManager },
+    { to: '/operations-map', icon: Map, label: 'Operations Map', show: isExpeditionManager },
+    { to: '/alerts', icon: AlertTriangle, label: 'Alerts & Emergency', show: true },
+    { to: '/reports', icon: BarChart2, label: 'Reports', show: true },
+    { to: '/activity', icon: History, label: 'Activity Feed', show: true },
   ];
+
+  const navItems = allNavItems.filter(item => item.show);
 
   return (
     <div className={clsx('sidebar', collapsed && 'sidebar-collapsed')}>
@@ -39,26 +48,17 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       <div className="sidebar-nav">
         {navItems.map((item) => {
           const Icon = item.icon;
-          if (item.active) {
-            return (
-              <NavLink 
-                key={item.to} 
-                to={item.to} 
-                className={({ isActive }) => clsx('nav-item', isActive && 'active')}
-                title={item.label}
-              >
-                <Icon size={20} />
-                {!collapsed && <span>{item.label}</span>}
-              </NavLink>
-            );
-          } else {
-            return (
-              <div key={item.to} className="nav-item nav-item-disabled" title={`${item.label} (Phase 6)`}>
-                <Icon size={20} />
-                {!collapsed && <span>{item.label}</span>}
-              </div>
-            );
-          }
+          return (
+            <NavLink 
+              key={item.to} 
+              to={item.to} 
+              className={({ isActive }) => clsx('nav-item', isActive && 'active')}
+              title={item.label}
+            >
+              <Icon size={20} />
+              {!collapsed && <span>{item.label}</span>}
+            </NavLink>
+          );
         })}
       </div>
       
