@@ -34,12 +34,8 @@ export default function Sidebar() {
       />
       <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="sidebar-brand-icon">
-          <Map size={20} />
-        </div>
-        <div className="sidebar-brand-text">
-          <span className="sidebar-brand-name">Fuzaris</span>
-          <span className="sidebar-brand-sub">Logistics & Asset Mgmt</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '10px 0' }}>
+          <img src="/logo.png" alt="Fuzaris Logo" style={{ height: '60px', width: 'auto', objectFit: 'contain' }} />
         </div>
       </div>
 
